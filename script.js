@@ -33,6 +33,9 @@ if (themeToggle) {
   });
 }
 
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const revealVariants = ['reveal-up', 'reveal-left', 'reveal-right', 'reveal-zoom'];
+
 const revealObserver = new IntersectionObserver(
   (entries) => {
     entries.forEach((entry) => {
@@ -43,15 +46,63 @@ const revealObserver = new IntersectionObserver(
     });
   },
   {
-    threshold: 0.16,
-    rootMargin: '0px 0px -40px 0px',
+    threshold: 0.2,
+    rootMargin: '0px 0px -10% 0px',
   }
 );
 
 revealItems.forEach((item, index) => {
-  item.style.transitionDelay = `${Math.min(index * 35, 260)}ms`;
+  const variant = revealVariants[index % revealVariants.length];
+  item.classList.add(variant);
+  item.style.transitionDelay = `${Math.min(index * 50, 340)}ms`;
   revealObserver.observe(item);
 });
+
+const sections = document.querySelectorAll('main .section');
+const parallaxTargets = document.querySelectorAll('.hero-visual, .screen-card, .console-shell');
+
+if (!prefersReducedMotion) {
+  parallaxTargets.forEach((el) => el.classList.add('parallax'));
+
+  let rafPending = false;
+  const updateOnScroll = () => {
+    const viewportHeight = window.innerHeight;
+    const viewportCenter = viewportHeight / 2;
+
+    sections.forEach((section) => {
+      const rect = section.getBoundingClientRect();
+      const sectionCenter = rect.top + rect.height / 2;
+      const distance = Math.abs(sectionCenter - viewportCenter);
+      const normalized = Math.max(0, 1 - distance / (viewportHeight * 0.85));
+      section.style.setProperty('--section-progress', normalized.toFixed(3));
+    });
+
+    parallaxTargets.forEach((target, index) => {
+      const rect = target.getBoundingClientRect();
+      if (rect.bottom < 0 || rect.top > viewportHeight) {
+        return;
+      }
+
+      const elementCenter = rect.top + rect.height / 2;
+      const delta = (elementCenter - viewportCenter) / viewportHeight;
+      const intensity = index === 0 ? 12 : 8;
+      target.style.setProperty('--parallax-y', `${(-delta * intensity).toFixed(2)}px`);
+    });
+
+    rafPending = false;
+  };
+
+  const onScrollOrResize = () => {
+    if (!rafPending) {
+      rafPending = true;
+      window.requestAnimationFrame(updateOnScroll);
+    }
+  };
+
+  window.addEventListener('scroll', onScrollOrResize, { passive: true });
+  window.addEventListener('resize', onScrollOrResize, { passive: true });
+  updateOnScroll();
+}
 
 const form = document.getElementById('contactForm');
 const formStatus = document.getElementById('formStatus');
