@@ -4,9 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import {
-  authenticateAdmin,
   clearAdminSession,
-  createAdminSession,
   requireAdminSession,
 } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -31,24 +29,6 @@ function parseProjectDate(value: string) {
   }
 
   return date;
-}
-
-export async function loginAction(formData: FormData) {
-  const email = getValue(formData, "email").toLowerCase();
-  const password = getValue(formData, "password");
-
-  if (!email || !password) {
-    redirect("/admin/login?error=missing");
-  }
-
-  const adminSession = await authenticateAdmin(email, password);
-
-  if (!adminSession) {
-    redirect("/admin/login?error=invalid");
-  }
-
-  await createAdminSession(adminSession);
-  redirect("/admin");
 }
 
 export async function logoutAction() {

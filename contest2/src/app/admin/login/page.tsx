@@ -3,13 +3,15 @@ import { redirect } from "next/navigation";
 
 import { getAdminSession } from "@/lib/auth";
 
-import { loginAction } from "../actions";
+import { loginAction } from "../login-actions";
 
 type AdminLoginPageProps = {
   searchParams: Promise<{
     error?: string;
   }>;
 };
+
+export const runtime = "nodejs";
 
 export default async function AdminLoginPage({ searchParams }: AdminLoginPageProps) {
   const [session, params] = await Promise.all([getAdminSession(), searchParams]);

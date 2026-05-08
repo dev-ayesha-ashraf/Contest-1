@@ -5,8 +5,6 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { prisma } from "@/lib/prisma";
-
 const sessionCookieName = "portfolio_admin_session";
 const sessionDurationSeconds = 60 * 60 * 12;
 const encoder = new TextEncoder();
@@ -23,6 +21,7 @@ function getSessionSecret() {
 }
 
 export async function authenticateAdmin(email: string, password: string) {
+  const { prisma } = await import("@/lib/prisma");
   const adminUser = await prisma.adminUser.findUnique({
     where: { email: email.toLowerCase() },
   });
