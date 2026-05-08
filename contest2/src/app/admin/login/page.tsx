@@ -12,6 +12,7 @@ type AdminLoginPageProps = {
 };
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export default async function AdminLoginPage({ searchParams }: AdminLoginPageProps) {
   const [session, params] = await Promise.all([getAdminSession(), searchParams]);
@@ -20,7 +21,8 @@ export default async function AdminLoginPage({ searchParams }: AdminLoginPagePro
     redirect("/admin");
   }
 
-  const showError = params.error === "invalid" || params.error === "missing";
+  const showCredentialError = params.error === "invalid" || params.error === "missing";
+  const showServerError = params.error === "server";
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f9f3e8_0%,#efe5d4_100%)] px-4 py-8 text-slate-950 sm:px-6">
@@ -56,9 +58,15 @@ export default async function AdminLoginPage({ searchParams }: AdminLoginPagePro
             </Link>
           </div>
 
-          {showError ? (
+          {showCredentialError ? (
             <div className="mt-6 rounded-[20px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
               Enter a valid admin email and password.
+            </div>
+          ) : null}
+
+          {showServerError ? (
+            <div className="mt-6 rounded-[20px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
+              Admin login is temporarily unavailable on this deployment. For now, continue using localhost with seeded dummy data.
             </div>
           ) : null}
 

@@ -10,19 +10,24 @@ function getValue(formData: FormData, key: string) {
 }
 
 export async function loginAction(formData: FormData) {
-  const email = getValue(formData, "email").toLowerCase();
-  const password = getValue(formData, "password");
+  try {
+    const email = getValue(formData, "email").toLowerCase();
+    const password = getValue(formData, "password");
 
-  if (!email || !password) {
-    redirect("/admin/login?error=missing");
+    if (!email || !password) {
+      redirect("/admin/login?error=missing");
+    }
+
+    const adminSession = await authenticateAdmin(email, password);
+
+    if (!adminSession) {
+      redirect("/admin/login?error=invalid");
+    }
+
+    await createAdminSession(adminSession);
+    redirect("/admin");
+  } catch (error) {
+    console.error("Admin login failed", error);
+    redirect("/admin/login?error=server");
   }
-
-  const adminSession = await authenticateAdmin(email, password);
-
-  if (!adminSession) {
-    redirect("/admin/login?error=invalid");
-  }
-
-  await createAdminSession(adminSession);
-  redirect("/admin");
 }

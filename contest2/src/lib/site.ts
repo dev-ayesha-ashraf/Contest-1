@@ -20,6 +20,132 @@ const defaultSiteSettings = {
   contactLocation: "Lahore, Pakistan",
 } as const;
 
+const defaultSkills = [
+  {
+    id: "dummy-skill-ui-design",
+    name: "UI Design",
+    sortOrder: 1,
+    createdAt: new Date("2025-01-10T00:00:00.000Z"),
+    updatedAt: new Date("2025-01-10T00:00:00.000Z"),
+  },
+  {
+    id: "dummy-skill-front-end",
+    name: "Front-End Development",
+    sortOrder: 2,
+    createdAt: new Date("2025-01-11T00:00:00.000Z"),
+    updatedAt: new Date("2025-01-11T00:00:00.000Z"),
+  },
+  {
+    id: "dummy-skill-brand",
+    name: "Brand Systems",
+    sortOrder: 3,
+    createdAt: new Date("2025-01-12T00:00:00.000Z"),
+    updatedAt: new Date("2025-01-12T00:00:00.000Z"),
+  },
+  {
+    id: "dummy-skill-responsive",
+    name: "Responsive Design",
+    sortOrder: 4,
+    createdAt: new Date("2025-01-13T00:00:00.000Z"),
+    updatedAt: new Date("2025-01-13T00:00:00.000Z"),
+  },
+  {
+    id: "dummy-skill-seo",
+    name: "SEO Foundations",
+    sortOrder: 5,
+    createdAt: new Date("2025-01-14T00:00:00.000Z"),
+    updatedAt: new Date("2025-01-14T00:00:00.000Z"),
+  },
+  {
+    id: "dummy-skill-stack",
+    name: "Laravel / Next.js",
+    sortOrder: 6,
+    createdAt: new Date("2025-01-15T00:00:00.000Z"),
+    updatedAt: new Date("2025-01-15T00:00:00.000Z"),
+  },
+];
+
+const defaultSocialLinks = [
+  {
+    id: "dummy-social-linkedin",
+    label: "LinkedIn",
+    url: "https://linkedin.com",
+    sortOrder: 1,
+    createdAt: new Date("2025-01-10T00:00:00.000Z"),
+    updatedAt: new Date("2025-01-10T00:00:00.000Z"),
+  },
+  {
+    id: "dummy-social-behance",
+    label: "Behance",
+    url: "https://behance.net",
+    sortOrder: 2,
+    createdAt: new Date("2025-01-11T00:00:00.000Z"),
+    updatedAt: new Date("2025-01-11T00:00:00.000Z"),
+  },
+  {
+    id: "dummy-social-github",
+    label: "GitHub",
+    url: "https://github.com",
+    sortOrder: 3,
+    createdAt: new Date("2025-01-12T00:00:00.000Z"),
+    updatedAt: new Date("2025-01-12T00:00:00.000Z"),
+  },
+  {
+    id: "dummy-social-instagram",
+    label: "Instagram",
+    url: "https://instagram.com",
+    sortOrder: 4,
+    createdAt: new Date("2025-01-13T00:00:00.000Z"),
+    updatedAt: new Date("2025-01-13T00:00:00.000Z"),
+  },
+];
+
+const defaultProjects = [
+  {
+    id: "dummy-project-editorial",
+    slug: "editorial-commerce-refresh",
+    title: "Editorial Commerce Refresh",
+    description:
+      "A conversion-focused redesign for a lifestyle marketplace with modular campaign storytelling, faster page load performance, and a clearer customer path from discovery to purchase.",
+    category: "Brand Experience",
+    projectDate: new Date("2026-03-14T00:00:00.000Z"),
+    projectLink: "https://example.com/editorial-commerce-refresh",
+    imageUrl: null,
+    createdAt: new Date("2026-03-14T00:00:00.000Z"),
+    updatedAt: new Date("2026-03-14T00:00:00.000Z"),
+  },
+  {
+    id: "dummy-project-dashboard",
+    slug: "studio-booking-dashboard",
+    title: "Studio Booking Dashboard",
+    description:
+      "A scheduling and availability dashboard for a creative studio, built around quick team coordination, visual timelines, and fewer manual handoffs across project operations.",
+    category: "Product Design",
+    projectDate: new Date("2025-11-02T00:00:00.000Z"),
+    projectLink: "https://example.com/studio-booking-dashboard",
+    imageUrl: null,
+    createdAt: new Date("2025-11-02T00:00:00.000Z"),
+    updatedAt: new Date("2025-11-02T00:00:00.000Z"),
+  },
+  {
+    id: "dummy-project-travel",
+    slug: "luxury-travel-launch-site",
+    title: "Luxury Travel Launch Site",
+    description:
+      "A premium campaign site that pairs immersive storytelling with SEO-aware content architecture to support a new destination collection and international acquisition campaigns.",
+    category: "Marketing Site",
+    projectDate: new Date("2025-08-19T00:00:00.000Z"),
+    projectLink: "https://example.com/luxury-travel-launch-site",
+    imageUrl: null,
+    createdAt: new Date("2025-08-19T00:00:00.000Z"),
+    updatedAt: new Date("2025-08-19T00:00:00.000Z"),
+  },
+];
+
+function applyFallbackIfEmpty<T>(items: T[], fallbackItems: T[]) {
+  return items.length > 0 ? items : fallbackItems;
+}
+
 async function getSiteSettingsOrDefault() {
   const existingSettings = await prisma.siteSettings.findFirst();
 
@@ -45,18 +171,18 @@ export async function getSiteData() {
 
     return {
       settings,
-      skills,
-      socialLinks,
-      projects,
+      skills: applyFallbackIfEmpty(skills, defaultSkills),
+      socialLinks: applyFallbackIfEmpty(socialLinks, defaultSocialLinks),
+      projects: applyFallbackIfEmpty(projects, defaultProjects),
     };
   } catch (error) {
     console.error("Failed to load site data from database", error);
 
     return {
       settings: defaultSiteSettings,
-      skills: [],
-      socialLinks: [],
-      projects: [],
+      skills: defaultSkills,
+      socialLinks: defaultSocialLinks,
+      projects: defaultProjects,
     };
   }
 }
@@ -80,9 +206,9 @@ export async function getAdminDashboardData() {
 
     return {
       settings,
-      skills,
-      socialLinks,
-      projects,
+      skills: applyFallbackIfEmpty(skills, defaultSkills),
+      socialLinks: applyFallbackIfEmpty(socialLinks, defaultSocialLinks),
+      projects: applyFallbackIfEmpty(projects, defaultProjects),
       submissions,
     };
   } catch (error) {
@@ -90,9 +216,9 @@ export async function getAdminDashboardData() {
 
     return {
       settings: defaultSiteSettings,
-      skills: [],
-      socialLinks: [],
-      projects: [],
+      skills: defaultSkills,
+      socialLinks: defaultSocialLinks,
+      projects: defaultProjects,
       submissions: [],
     };
   }
@@ -100,11 +226,17 @@ export async function getAdminDashboardData() {
 
 export async function getProjectBySlug(slug: string) {
   try {
-    return await prisma.project.findUnique({
+    const project = await prisma.project.findUnique({
       where: { slug },
     });
+
+    if (project) {
+      return project;
+    }
+
+    return defaultProjects.find((defaultProject) => defaultProject.slug === slug) ?? null;
   } catch (error) {
     console.error("Failed to load project by slug", error);
-    return null;
+    return defaultProjects.find((defaultProject) => defaultProject.slug === slug) ?? null;
   }
 }

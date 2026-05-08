@@ -71,14 +71,14 @@ export async function clearAdminSession() {
 }
 
 export async function getAdminSession(): Promise<AdminSession | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(sessionCookieName)?.value;
-
-  if (!token) {
-    return null;
-  }
-
   try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get(sessionCookieName)?.value;
+
+    if (!token) {
+      return null;
+    }
+
     const { payload } = await jwtVerify(token, getSessionSecret());
 
     if (typeof payload.sub !== "string" || typeof payload.email !== "string") {
