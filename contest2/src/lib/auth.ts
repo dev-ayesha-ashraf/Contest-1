@@ -15,32 +15,74 @@ export type AdminSession = {
   name: string | null;
 };
 
+function getEnvironmentAdminCredentials() {
+  const email = (process.env.ADMIN_EMAIL ?? "").trim().toLowerCase();
+  const password = (process.env.ADMIN_PASSWORD ?? "").trim();
+  const name = (process.env.ADMIN_NAME ?? "Admin").trim() || "Admin";
+
+  if (!email || !password) {
+    return null;
+  }
+
+  return {
+    email,
+    password,
+    name,
+  };
+}
+
+function authenticateUsingEnvironmentCredentials(
+  email: string,
+  password: string,
+): AdminSession | null {
+  const fallbackAdmin = getEnvironmentAdminCredentials();
+
+  if (!fallbackAdmin) {
+    return null;
+  }
+
+  if (email.toLowerCase() !== fallbackAdmin.email || password !== fallbackAdmin.password) {
+    return null;
+  }
+
+  return {
+    userId: "env-admin",
+    email: fallbackAdmin.email,
+    name: fallbackAdmin.name,
+  };
+}
+
 function getSessionSecret() {
   const secret = process.env.SESSION_SECRET ?? "development-session-secret-change-me";
   return encoder.encode(secret);
 }
 
 export async function authenticateAdmin(email: string, password: string) {
-  const { prisma } = await import("@/lib/prisma");
-  const adminUser = await prisma.adminUser.findUnique({
-    where: { email: email.toLowerCase() },
-  });
+  try {
+    const { prisma } = await import("@/lib/prisma");
+    const adminUser = await prisma.adminUser.findUnique({
+      where: { email: email.toLowerCase() },
+    });
 
-  if (!adminUser) {
-    return null;
+    if (!adminUser) {
+      return authenticateUsingEnvironmentCredentials(email, password);
+    }
+
+    const passwordMatches = await bcrypt.compare(password, adminUser.passwordHash);
+
+    if (!passwordMatches) {
+      return authenticateUsingEnvironmentCredentials(email, password);
+    }
+
+    return {
+      userId: adminUser.id,
+      email: adminUser.email,
+      name: adminUser.name,
+    } satisfies AdminSession;
+  } catch (error) {
+    console.error("Database auth lookup failed, using environment fallback", error);
+    return authenticateUsingEnvironmentCredentials(email, password);
   }
-
-  const passwordMatches = await bcrypt.compare(password, adminUser.passwordHash);
-
-  if (!passwordMatches) {
-    return null;
-  }
-
-  return {
-    userId: adminUser.id,
-    email: adminUser.email,
-    name: adminUser.name,
-  } satisfies AdminSession;
 }
 
 export async function createAdminSession(session: AdminSession) {
