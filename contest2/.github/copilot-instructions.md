@@ -1,0 +1,15 @@
+- [x] Verify that the copilot-instructions.md file in the .github directory is created.
+- [x] Clarify project requirements.
+- [x] Scaffold the project.
+- [x] Customize the project.
+- [x] Install required extensions.
+- [x] Compile the project.
+- [ ] Create and run task.
+- [ ] Launch the project.
+- [x] Ensure documentation is complete.
+
+- Project root: current workspace folder.
+- Stack: Next.js App Router, TypeScript, Tailwind CSS, Prisma, SQLite.
+- Admin: secure login, CRUD for projects, settings, skills, and social links.
+- Build flow: `npm install`, `npm run db:push`, `npm run db:seed`, `npm run build`.
+- Runtime note: local file uploads require writable disk on the deployment target.
