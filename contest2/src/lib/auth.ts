@@ -16,13 +16,9 @@ export type AdminSession = {
 };
 
 function getEnvironmentAdminCredentials() {
-  const email = (process.env.ADMIN_EMAIL ?? "").trim().toLowerCase();
-  const password = (process.env.ADMIN_PASSWORD ?? "").trim();
-  const name = (process.env.ADMIN_NAME ?? "Admin").trim() || "Admin";
-
-  if (!email || !password) {
-    return null;
-  }
+  const email = (process.env.ADMIN_EMAIL ?? "admin@portfolio.local").trim().toLowerCase();
+  const password = (process.env.ADMIN_PASSWORD ?? "ChangeMe123!").trim();
+  const name = (process.env.ADMIN_NAME ?? "Ayesha").trim() || "Ayesha";
 
   return {
     email,

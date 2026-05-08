@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-labelledby="title2 desc2">
+  <title id="title2">Studio Booking Dashboard</title>
+  <desc id="desc2">Decorative dummy project image with dashboard-like cards and timeline accents.</desc>
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f2a33"/>
+      <stop offset="100%" stop-color="#2d6a78"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="760" fill="url(#bg2)"/>
+  <rect x="70" y="70" width="1060" height="620" rx="26" fill="#f4ede0" fill-opacity="0.92"/>
+  <rect x="112" y="126" width="260" height="160" rx="18" fill="#173d46" fill-opacity="0.88"/>
+  <rect x="402" y="126" width="260" height="160" rx="18" fill="#2a5d69" fill-opacity="0.88"/>
+  <rect x="692" y="126" width="260" height="160" rx="18" fill="#d86e4a" fill-opacity="0.9"/>
+  <rect x="112" y="326" width="840" height="36" rx="12" fill="#173d46" fill-opacity="0.18"/>
+  <rect x="112" y="388" width="650" height="36" rx="12" fill="#173d46" fill-opacity="0.14"/>
+  <rect x="112" y="450" width="740" height="36" rx="12" fill="#173d46" fill-opacity="0.1"/>
+  <text x="112" y="560" fill="#173d46" font-family="Georgia, serif" font-size="44" font-weight="700">Studio Booking Dashboard</text>
+</svg>

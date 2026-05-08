@@ -12,6 +12,7 @@ const defaultProjects = [
     category: "Brand Experience",
     projectDate: new Date("2026-03-14"),
     projectLink: "https://example.com/editorial-commerce-refresh",
+    imageUrl: "/dummy/project-1.svg",
   },
   {
     title: "Studio Booking Dashboard",
@@ -21,6 +22,7 @@ const defaultProjects = [
     category: "Product Design",
     projectDate: new Date("2025-11-02"),
     projectLink: "https://example.com/studio-booking-dashboard",
+    imageUrl: "/dummy/project-2.svg",
   },
   {
     title: "Luxury Travel Launch Site",
@@ -30,6 +32,7 @@ const defaultProjects = [
     category: "Marketing Site",
     projectDate: new Date("2025-08-19"),
     projectLink: "https://example.com/luxury-travel-launch-site",
+    imageUrl: "/dummy/project-3.svg",
   },
 ];
 
@@ -86,9 +89,18 @@ async function main() {
     });
   }
 
-  if ((await prisma.project.count()) === 0) {
-    await prisma.project.createMany({
-      data: defaultProjects,
+  for (const project of defaultProjects) {
+    await prisma.project.upsert({
+      where: { slug: project.slug },
+      update: {
+        title: project.title,
+        description: project.description,
+        category: project.category,
+        projectDate: project.projectDate,
+        projectLink: project.projectLink,
+        imageUrl: project.imageUrl,
+      },
+      create: project,
     });
   }
 

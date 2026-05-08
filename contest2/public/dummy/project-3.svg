@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-labelledby="title3 desc3">
+  <title id="title3">Luxury Travel Launch Site</title>
+  <desc id="desc3">Decorative dummy project image with travel-inspired layered waves and cards.</desc>
+  <defs>
+    <linearGradient id="bg3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#12424b"/>
+      <stop offset="45%" stop-color="#2d5a68"/>
+      <stop offset="100%" stop-color="#f08a58"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="760" fill="url(#bg3)"/>
+  <path d="M0 530 Q200 430 400 520 T800 530 T1200 500 L1200 760 L0 760 Z" fill="#f4ede0" fill-opacity="0.84"/>
+  <path d="M0 580 Q240 500 460 575 T920 585 T1200 560 L1200 760 L0 760 Z" fill="#f4ede0" fill-opacity="0.58"/>
+  <rect x="90" y="98" width="560" height="82" rx="14" fill="#f4ede0" fill-opacity="0.94"/>
+  <rect x="90" y="208" width="380" height="24" rx="10" fill="#f4ede0" fill-opacity="0.75"/>
+  <rect x="90" y="250" width="520" height="24" rx="10" fill="#f4ede0" fill-opacity="0.58"/>
+  <circle cx="925" cy="200" r="120" fill="#f4ede0" fill-opacity="0.2"/>
+  <circle cx="980" cy="200" r="74" fill="#f4ede0" fill-opacity="0.3"/>
+  <text x="90" y="152" fill="#173d46" font-family="Georgia, serif" font-size="44" font-weight="700">Luxury Travel Launch Site</text>
+</svg>

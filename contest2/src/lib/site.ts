@@ -110,7 +110,7 @@ const defaultProjects = [
     category: "Brand Experience",
     projectDate: new Date("2026-03-14T00:00:00.000Z"),
     projectLink: "https://example.com/editorial-commerce-refresh",
-    imageUrl: null,
+    imageUrl: "/dummy/project-1.svg",
     createdAt: new Date("2026-03-14T00:00:00.000Z"),
     updatedAt: new Date("2026-03-14T00:00:00.000Z"),
   },
@@ -123,7 +123,7 @@ const defaultProjects = [
     category: "Product Design",
     projectDate: new Date("2025-11-02T00:00:00.000Z"),
     projectLink: "https://example.com/studio-booking-dashboard",
-    imageUrl: null,
+    imageUrl: "/dummy/project-2.svg",
     createdAt: new Date("2025-11-02T00:00:00.000Z"),
     updatedAt: new Date("2025-11-02T00:00:00.000Z"),
   },
@@ -136,11 +136,26 @@ const defaultProjects = [
     category: "Marketing Site",
     projectDate: new Date("2025-08-19T00:00:00.000Z"),
     projectLink: "https://example.com/luxury-travel-launch-site",
-    imageUrl: null,
+    imageUrl: "/dummy/project-3.svg",
     createdAt: new Date("2025-08-19T00:00:00.000Z"),
     updatedAt: new Date("2025-08-19T00:00:00.000Z"),
   },
 ];
+
+const projectImageFallbackBySlug: Record<string, string> = {
+  "editorial-commerce-refresh": "/dummy/project-1.svg",
+  "studio-booking-dashboard": "/dummy/project-2.svg",
+  "luxury-travel-launch-site": "/dummy/project-3.svg",
+};
+
+function withFallbackProjectImages<T extends { slug: string; imageUrl: string | null }>(
+  projects: T[],
+): T[] {
+  return projects.map((project) => ({
+    ...project,
+    imageUrl: project.imageUrl ?? projectImageFallbackBySlug[project.slug] ?? "/dummy/project-1.svg",
+  }));
+}
 
 function applyFallbackIfEmpty<T>(items: T[], fallbackItems: T[]) {
   return items.length > 0 ? items : fallbackItems;
@@ -173,7 +188,7 @@ export async function getSiteData() {
       settings,
       skills: applyFallbackIfEmpty(skills, defaultSkills),
       socialLinks: applyFallbackIfEmpty(socialLinks, defaultSocialLinks),
-      projects: applyFallbackIfEmpty(projects, defaultProjects),
+      projects: withFallbackProjectImages(applyFallbackIfEmpty(projects, defaultProjects)),
     };
   } catch (error) {
     console.error("Failed to load site data from database", error);
@@ -182,7 +197,7 @@ export async function getSiteData() {
       settings: defaultSiteSettings,
       skills: defaultSkills,
       socialLinks: defaultSocialLinks,
-      projects: defaultProjects,
+      projects: withFallbackProjectImages(defaultProjects),
     };
   }
 }
@@ -208,7 +223,7 @@ export async function getAdminDashboardData() {
       settings,
       skills: applyFallbackIfEmpty(skills, defaultSkills),
       socialLinks: applyFallbackIfEmpty(socialLinks, defaultSocialLinks),
-      projects: applyFallbackIfEmpty(projects, defaultProjects),
+      projects: withFallbackProjectImages(applyFallbackIfEmpty(projects, defaultProjects)),
       submissions,
     };
   } catch (error) {
@@ -218,7 +233,7 @@ export async function getAdminDashboardData() {
       settings: defaultSiteSettings,
       skills: defaultSkills,
       socialLinks: defaultSocialLinks,
-      projects: defaultProjects,
+      projects: withFallbackProjectImages(defaultProjects),
       submissions: [],
     };
   }
@@ -231,7 +246,7 @@ export async function getProjectBySlug(slug: string) {
     });
 
     if (project) {
-      return project;
+      return withFallbackProjectImages([project])[0];
     }
 
     return defaultProjects.find((defaultProject) => defaultProject.slug === slug) ?? null;
