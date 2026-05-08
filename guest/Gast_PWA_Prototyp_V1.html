@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=0" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#0f766e" />
+<title>QR_Gast · Prototyp V1 (Klickbar)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#d8dde4;
+    --frame:#3a3f45;
+    --surface:#fefdf9;
+    --surface-soft:#f4f1ea;
+    --text:#1f2933;
+    --text-muted:#5f6c77;
+    --text-dim:#8a97a3;
+    --border:#e7e0d4;
+    --border-strong:#d8cfbe;
+    --accent:#2a6f67;
+    --accent-soft:#e2f0ed;
+    --accent-text:#1f5a54;
+    --upsell:#8f5c2c;
+    --upsell-soft:#f5e7d8;
+    --poi:#2f6d87;
+    --poi-soft:#deecf3;
+    --warn:#dc2626;
+    --warn-soft:#fee2e2;
+    --warm:#b1742d;
+    --warm-soft:#f8e8d4;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; padding:0; background:radial-gradient(circle at 12% 10%, #e9edf2 0%, var(--bg) 55%); color:var(--text); font-family:"Plus Jakarta Sans","Segoe UI",sans-serif; -webkit-font-smoothing:antialiased; height:100%; overflow:hidden;}
+
+  /* ================= STAGE: Phone-Frame (Desktop) =============== */
+  .stage{
+    width:100vw; height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+  }
+  .phone{
+    width:390px; height:844px;
+    background:linear-gradient(155deg, #4a5158, var(--frame));
+    border-radius:46px;
+    padding:12px;
+    box-shadow:0 28px 70px -18px rgba(25,31,38,0.42), 0 0 0 2px rgba(255,255,255,0.12);
+    position:relative;
+  }
+  .phone-screen{
+    width:100%; height:100%;
+    background:linear-gradient(180deg, #faf6ee 0%, var(--surface) 28%);
+    border-radius:34px;
+    overflow:hidden;
+    position:relative;
+  }
+  .notch{position:absolute; top:14px; left:50%; transform:translateX(-50%); width:120px; height:30px; background:#000; border-radius:18px; z-index:80;}
+  .status-bar{
+    position:absolute; top:0; left:0; right:0; height:42px;
+    display:flex; align-items:flex-end; justify-content:space-between;
+    padding:0 22px 6px;
+    font-size:13px; font-weight:600;
+    z-index:5; pointer-events:none;
+  }
+  .status-icons{display:flex; gap:5px; align-items:center;}
+
+  /* ================= MOBILE: Fullscreen, kein Frame =============== */
+  @media (max-width: 500px){
+    .stage{width:100vw; height:100vh;}
+    .phone{
+      width:100vw; height:100vh;
+      border-radius:0;
+      padding:0;
+      box-shadow:none;
+    }
+    .phone-screen{border-radius:0;}
+    .notch{display:none;}
+  }
+
+  /* ================= HOME (Default-View) =============== */
+  .home{
+    position:absolute; inset:0;
+    overflow-y:auto; overflow-x:hidden;
+    padding:42px 0 26px;
+    -webkit-overflow-scrolling:touch;
+    z-index:1;
+  }
+
+  /* Hero */
+  .hero{
+    height:220px; position:relative;
+    background:
+      linear-gradient(180deg, rgba(22,33,42,0.08) 20%, rgba(22,33,42,0.72) 100%),
+      url('https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&auto=format&fit=crop') center/cover;
+    border-bottom-left-radius:20px;
+    border-bottom-right-radius:20px;
+    margin:0 12px;
+  }
+  .hero-content{position:absolute; left:20px; right:20px; bottom:16px; color:#fff;}
+  .hero-property{font-size:10px; font-weight:600; opacity:0.9; letter-spacing:0.1em; text-transform:uppercase;}
+  .hero-title{font-size:30px; font-weight:600; margin-top:6px; line-height:1.05; font-family:"Newsreader", Georgia, serif; letter-spacing:0.01em;}
+  .hero-icons{position:absolute; top:14px; right:14px; display:flex; gap:6px;}
+  .hero-icon{
+    min-width:34px; height:34px; border-radius:999px;
+    background:rgba(255,255,255,0.92); backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,0.55);
+    display:flex; align-items:center; justify-content:center;
+    font-size:15px; position:relative; cursor:pointer;
+  }
+  .hero-icon .badge{position:absolute; top:-2px; right:-2px; width:14px; height:14px; border-radius:50%; background:#dc2626; color:#fff; font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center; border:1.5px solid #fff;}
+  .hero-icon.lang{font-size:11px; font-weight:700; padding:0 8px; width:auto;}
+
+  /* Welcome-Card */
+  .welcome-card{
+    margin:14px 16px 0;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:13px 14px;
+    display:flex; align-items:center; gap:11px;
+    cursor:pointer;
+    box-shadow:0 6px 18px -14px rgba(34,42,48,0.5);
+  }
+  .welcome-host-avatar-single{
+    width:34px; height:34px; border-radius:50%;
+    background-size:cover; background-position:center;
+    flex-shrink:0;
+    background-image:url('https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&auto=format&fit=crop');
+  }
+  .welcome-card-text-block{flex:1; min-width:0;}
+  .welcome-card-eyebrow{font-size:10px; font-weight:600; color:var(--text-muted); letter-spacing:0.05em; text-transform:uppercase;}
+  .welcome-card-title{font-size:13.5px; font-weight:600; color:var(--text); margin-top:2px; line-height:1.2;}
+  .welcome-card-cta{font-size:13px; font-weight:600; color:var(--text-dim);}
+
+  /* Strip-Box */
+  .strip-box{
+    margin:14px 16px 0;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:16px; padding:12px;
+    box-shadow:0 6px 18px -14px rgba(34,42,48,0.42);
+  }
+  .strip-box + .strip-box{margin-top:8px;}
+  .strip-title{font-size:10.5px; font-weight:700; color:var(--text-muted); letter-spacing:0.05em; text-transform:uppercase; margin-bottom:8px;}
+  .strip-row{display:flex; gap:6px;}
+  .strip-pill{
+    flex:1;
+    background:var(--surface-soft); border:1px solid var(--border);
+    padding:9px 4px; border-radius:10px;
+    font-size:11.5px; font-weight:600; color:var(--text);
+    text-align:center;
+    display:flex; align-items:center; justify-content:center; gap:5px;
+    cursor:pointer;
+  }
+
+  /* XL Hero-Tile */
+  .xl-tile{
+    margin:14px 16px 0;
+    border-radius:20px; overflow:hidden;
+    position:relative; height:170px;
+    color:#fff;
+    background-size:cover; background-position:center;
+    box-shadow:0 10px 24px -16px rgba(15,23,42,0.45);
+    cursor:pointer;
+  }
+  .xl-tile.poi{background-image:linear-gradient(180deg, rgba(8,145,178,0.0) 30%, rgba(8,47,73,0.85) 100%), url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=900&auto=format&fit=crop');}
+  .xl-tile.svc{background-image:linear-gradient(180deg, rgba(124,58,237,0.0) 30%, rgba(46,16,101,0.85) 100%), url('https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=900&auto=format&fit=crop');}
+  .xl-overlay{position:absolute; left:14px; right:14px; bottom:12px;}
+  .xl-eyebrow{font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; opacity:0.9;}
+  .xl-title{font-size:19px; font-weight:700; margin-top:2px; line-height:1.2;}
+  .xl-teaser{font-size:11.5px; opacity:0.9; margin-top:5px; line-height:1.35;}
+  .xl-cta-row{display:flex; gap:6px; margin-top:9px;}
+  .xl-chip{background:rgba(255,255,255,0.22); backdrop-filter:blur(8px); padding:4px 9px; border-radius:14px; font-size:10.5px; font-weight:600;}
+  .xl-arrow{position:absolute; top:14px; right:14px; width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,0.95); color:#0f172a; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700;}
+  .xl-count-badge{position:absolute; top:14px; left:14px; background:rgba(0,0,0,0.45); color:#fff; font-size:10px; font-weight:700; padding:3px 8px; border-radius:6px; letter-spacing:0.04em; text-transform:uppercase;}
+
+  /* 2x2 Small-Tiles */
+  .home-section-title{margin:22px 16px 8px; font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:0.12em; text-transform:uppercase;}
+  .small-grid{margin:26px 16px 0; display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .small-tile{
+    position:relative; border-radius:13px; overflow:hidden; height:108px;
+    color:#fff; background-size:cover; background-position:center;
+    box-shadow:0 10px 20px -14px rgba(15,23,42,0.5);
+    cursor:pointer;
+  }
+  .small-tile::before{
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(15,23,42,0.05) 30%, rgba(15,23,42,0.85) 100%);
+    pointer-events:none;
+  }
+  .small-tile-icon{
+    position:absolute; top:9px; left:9px;
+    width:27px; height:27px; border-radius:7px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; background:rgba(255,255,255,0.92); color:#0f172a;
+    backdrop-filter:blur(6px); z-index:2;
+  }
+  .small-tile-content{
+    position:absolute; left:9px; right:9px; bottom:9px; z-index:2;
+    background:rgba(20,24,28,0.4); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    padding:7px 9px; border-radius:8px;
+  }
+  .small-tile-title{font-size:12.5px; font-weight:700; line-height:1.2;}
+  .small-tile-sub{font-size:10px; line-height:1.3; opacity:0.92; margin-top:2px;}
+  .small-tile.t-rules{background-image:url('https://images.unsplash.com/photo-1554995207-c18c203602cb?w=500&auto=format&fit=crop');}
+  .small-tile.t-amenities{background-image:url('https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&auto=format&fit=crop');}
+  .small-tile.t-inventory{background-image:url('https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=500&auto=format&fit=crop');}
+  .small-tile.t-care{background-image:url('https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=500&auto=format&fit=crop');}
+
+  /* Aktions-Zeile */
+  .action-row{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:14px 16px 0;}
+  .action-card{
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:14px; padding:12px;
+    display:flex; align-items:center; gap:10px; cursor:pointer;
+    box-shadow:0 6px 16px -14px rgba(20,30,40,0.45);
+  }
+  .action-icon{width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:15px; background:var(--warm-soft); flex-shrink:0;}
+  .action-icon.feedback{background:var(--upsell-soft);}
+  .action-text{flex:1; min-width:0;}
+  .action-title{font-size:12.5px; font-weight:700; line-height:1.2;}
+  .action-sub{font-size:10.5px; color:var(--text-muted); line-height:1.25; margin-top:2px;}
+
+  /* SOS Final */
+  .sos-final{
+    margin:14px 16px 18px;
+    background:linear-gradient(135deg, #cc3b3b 0%, #a82828 100%);
+    color:#fff; border-radius:14px; padding:14px;
+    display:flex; align-items:center; gap:12px;
+    box-shadow:0 6px 18px -6px rgba(220,38,38,0.4);
+    cursor:pointer;
+  }
+  .sos-icon{font-size:26px;}
+  .sos-text{flex:1;}
+  .sos-title{font-size:14px; font-weight:700;}
+  .sos-sub{font-size:11px; opacity:0.92; margin-top:3px; line-height:1.3;}
+  .sos-arrow{font-size:20px; opacity:0.85;}
+
+  .footer-meta{text-align:center; margin:18px 16px 0; font-size:10.5px; color:var(--text-muted); line-height:1.5;}
+
+  /* ================= BOTTOM-SHEET (overlay system) =============== */
+  .sheet-overlay{
+    position:absolute; inset:0;
+    background:rgba(15,23,42,0.55);
+    z-index:50;
+    opacity:0; pointer-events:none;
+    transition:opacity 0.22s ease;
+  }
+  .sheet-overlay.open{opacity:1; pointer-events:auto;}
+
+  .sheet{
+    position:absolute; left:0; right:0; bottom:0;
+    background:var(--surface);
+    border-radius:28px 28px 0 0;
+    border-top:1px solid #f8f4eb;
+    box-shadow:0 -10px 38px rgba(23,31,37,0.2);
+    z-index:60;
+    display:flex; flex-direction:column;
+    transform:translateY(100%);
+    transition:transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+    height:90%;
+  }
+  .sheet.open{transform:translateY(0);}
+  .sheet.h-78{height:78%;}
+  .sheet.h-94{height:94%;}
+  .sheet.h-96{height:96%;}
+  .sheet.h-62{height:62%;}
+
+  .sheet-handle{width:42px; height:5px; background:#d6ccbb; border-radius:3px; margin:10px auto 0; cursor:pointer;}
+  .sheet-header{
+    padding:14px 18px 12px;
+    display:flex; align-items:center; justify-content:space-between;
+    border-bottom:1px solid var(--border);
+    flex-shrink:0;
+    background:linear-gradient(180deg, #fdfaf4 0%, var(--surface) 85%);
+  }
+  .sheet-title{font-size:16px; font-weight:700; letter-spacing:0.01em;}
+  .sheet-close{
+    width:30px; height:30px; border-radius:50%; background:var(--surface-soft);
+    border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; cursor:pointer;
+  }
+  .sheet-body{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; background:var(--surface);}
+
+  /* === Sprache === */
+  .lang-detect{margin:14px 18px 8px; background:var(--accent-soft); border:1px solid #99f6e4; border-radius:11px; padding:10px 12px; font-size:12px; color:var(--accent-text); display:flex; align-items:center; gap:8px;}
+  .lang-detect strong{color:#0f766e;}
+  .lang-list{margin:6px 18px 16px;}
+  .lang-row{display:flex; align-items:center; gap:12px; padding:13px 4px; border-bottom:1px solid var(--border); cursor:pointer;}
+  .lang-row:last-child{border-bottom:none;}
+  .lang-flag{font-size:22px;}
+  .lang-name{flex:1; min-width:0;}
+  .lang-name-primary{font-size:14.5px; font-weight:600;}
+  .lang-name-native{font-size:12px; color:var(--text-muted); margin-top:1px;}
+  .lang-check{
+    width:22px; height:22px; border-radius:50%;
+    background:var(--accent); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700;
+  }
+  .lang-check.empty{background:transparent; border:1.5px solid var(--border-strong); color:transparent;}
+  .lang-host-note{margin:0 18px 16px; font-size:11px; color:var(--text-muted); line-height:1.4; padding:10px 12px; background:var(--surface-soft); border:1px solid var(--border); border-radius:9px;}
+
+  /* === Nachrichten === */
+  .msg-tabs{display:flex; gap:6px; padding:10px 16px 0; border-bottom:1px solid var(--border); background:linear-gradient(180deg, #fbf8f2 0%, var(--surface) 80%);}
+  .msg-tab{padding:8px 12px; font-size:12px; font-weight:600; color:var(--text-muted); border-bottom:2px solid transparent; margin-bottom:-1px; cursor:pointer;}
+  .msg-tab.active{color:var(--text); border-bottom-color:var(--accent);}
+  .msg-tab .count{display:inline-block; margin-left:5px; background:var(--surface-soft); border:1px solid var(--border); color:var(--text-muted); font-size:10px; font-weight:700; padding:1px 6px; border-radius:8px;}
+  .msg-tab.active .count{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .msg-list{padding:6px 0;}
+  .msg-item{display:flex; gap:11px; padding:13px 16px; border-bottom:1px solid var(--border); position:relative;}
+  .msg-item.unread{background:#eef6f3;}
+  .msg-item.unread::before{content:""; position:absolute; left:6px; top:21px; width:6px; height:6px; border-radius:50%; background:var(--accent);}
+  .msg-avatar{width:38px; height:38px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:17px; background:var(--surface-soft); border:1px solid var(--border);}
+  .msg-avatar.host{background:#dbeafe; border-color:#bfdbfe; color:#1e40af; font-weight:700; font-size:14px;}
+  .msg-body{flex:1; min-width:0;}
+  .msg-row1{display:flex; align-items:center; gap:6px;}
+  .msg-title{font-size:13.5px; font-weight:700; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .msg-time{font-size:10.5px; color:var(--text-muted); flex-shrink:0;}
+  .msg-preview{font-size:12px; color:var(--text-muted); margin-top:3px; line-height:1.35; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .msg-status-row{display:flex; gap:5px; margin-top:5px; flex-wrap:wrap;}
+  .msg-pill{font-size:9.5px; font-weight:700; padding:2px 7px; border-radius:5px; letter-spacing:0.04em; text-transform:uppercase;}
+  .pill-pending{background:#fef3c7; color:#92400e;}
+  .pill-confirmed{background:#dcfce7; color:#166534;}
+  .pill-rejected{background:#fee2e2; color:#991b1b;}
+  .pill-chat{background:#e0e7ff; color:#3730a3;}
+  .pill-info{background:var(--surface-soft); color:var(--text-muted); border:1px solid var(--border);}
+  .msg-input-bar{padding:10px 14px; border-top:1px solid var(--border); background:var(--surface); display:flex; gap:8px; align-items:center; flex-shrink:0;}
+  .msg-input{flex:1; background:var(--surface-soft); border:1px solid var(--border); border-radius:18px; padding:8px 14px; font-size:12.5px; color:var(--text-muted);}
+  .msg-send{width:34px; height:34px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px;}
+  .msg-item{cursor:pointer;}
+  .msg-item:active{background:var(--surface-soft);}
+
+  /* === Nachrichten-Thread === */
+  .thread-header{padding:12px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; flex-shrink:0;}
+  .thread-back{font-size:22px; line-height:1; color:var(--text-muted); padding:2px 6px; cursor:pointer;}
+  .thread-headline{flex:1; min-width:0;}
+  .thread-title{font-size:14px; font-weight:700; line-height:1.2;}
+  .thread-sub{font-size:11px; color:var(--text-muted); margin-top:2px;}
+  .thread-status-row{display:flex; gap:5px; margin-top:5px; flex-wrap:wrap;}
+  .thread-body{flex:1; overflow-y:auto; padding:12px 14px 8px; display:flex; flex-direction:column; gap:8px; background:var(--surface-soft);}
+  .thread-system{align-self:center; font-size:10.5px; color:var(--text-muted); background:rgba(255,255,255,0.7); border:1px solid var(--border); border-radius:10px; padding:3px 9px; margin:4px 0;}
+  .thread-bubble{max-width:78%; padding:9px 11px; border-radius:14px; font-size:12.5px; line-height:1.4;}
+  .thread-bubble-host{align-self:flex-start; background:#fff; border:1px solid var(--border); border-bottom-left-radius:4px;}
+  .thread-bubble-guest{align-self:flex-end; background:var(--accent); color:#fff; border-bottom-right-radius:4px;}
+  .thread-bubble-time{font-size:10px; opacity:0.7; margin-top:3px; display:block;}
+  .thread-bubble-host .thread-bubble-time{color:var(--text-muted);}
+  .thread-bubble-guest .thread-bubble-time{color:rgba(255,255,255,0.85);}
+
+  /* === Lageplan === */
+  .lp-anchor-row{display:flex; gap:6px; padding:10px 16px 0; overflow-x:auto; border-bottom:1px solid var(--border); flex-shrink:0;}
+  .lp-anchor-row::-webkit-scrollbar{display:none;}
+  .lp-anchor{flex-shrink:0; font-size:11.5px; font-weight:600; padding:7px 12px 9px; border-bottom:2px solid transparent; color:var(--text-muted); margin-bottom:-1px; cursor:pointer;}
+  .lp-anchor.active{color:var(--text); border-bottom-color:var(--accent);}
+  .lp-section{margin:18px 16px 0;}
+  .lp-section:first-of-type{margin-top:14px;}
+  .lp-section-title{font-size:10.5px; font-weight:700; color:var(--text-muted); letter-spacing:0.06em; text-transform:uppercase; display:flex; align-items:center; gap:6px; margin-bottom:8px;}
+  .lp-section-title-bar{flex:1; height:1px; background:var(--border);}
+  .address-card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px;}
+  .address-headline{font-size:15px; font-weight:700; line-height:1.3;}
+  .address-sub{font-size:12px; color:var(--text-muted); margin-top:3px;}
+  .address-actions{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:11px;}
+  .address-btn{background:var(--surface-soft); border:1px solid var(--border); border-radius:9px; padding:9px; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer;}
+  .address-btn.primary{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .lp-card{background:var(--surface); border:1px solid var(--border); border-radius:13px; padding:13px;}
+  .lp-card + .lp-card{margin-top:8px;}
+  .lp-row{display:flex; align-items:center; gap:10px; padding:6px 0;}
+  .lp-row + .lp-row{border-top:1px solid var(--border); padding-top:11px; margin-top:5px;}
+  .lp-row-icon{width:32px; height:32px; border-radius:9px; background:var(--surface-soft); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0;}
+  .lp-row-text{flex:1; min-width:0;}
+  .lp-row-title{font-size:13px; font-weight:600; line-height:1.2;}
+  .lp-row-sub{font-size:11.5px; color:var(--text-muted); margin-top:2px; line-height:1.3;}
+  .lp-row-cta{font-size:11.5px; font-weight:700; color:var(--accent-text); flex-shrink:0; cursor:pointer;}
+  .parking-spot{display:flex; align-items:center; gap:14px; margin-bottom:11px;}
+  .parking-spot-badge{width:60px; height:60px; border-radius:14px; background:linear-gradient(135deg, #0f766e, #0e9488); color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 6px 14px -4px rgba(15,118,110,0.4);}
+  .parking-spot-badge .num{font-size:28px; font-weight:700; line-height:1;}
+  .parking-spot-badge .label{font-size:9px; font-weight:700; letter-spacing:0.06em; opacity:0.92;}
+  .parking-spot-text{flex:1;}
+  .parking-spot-text-title{font-size:14px; font-weight:700;}
+  .parking-spot-text-sub{font-size:11.5px; color:var(--text-muted); margin-top:2px;}
+  .parking-map{width:100%; height:140px; border-radius:11px; background-size:cover; background-position:center; border:1px solid var(--border); position:relative;}
+  .parking-map-tag{position:absolute; top:10px; left:10px; background:rgba(255,255,255,0.95); backdrop-filter:blur(6px); font-size:11px; font-weight:600; color:var(--text); padding:4px 9px; border-radius:6px;}
+  .echarge-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:11px;}
+  .echarge-spec{background:var(--surface-soft); border:1px solid var(--border); border-radius:9px; padding:8px 10px;}
+  .echarge-spec-label{font-size:9.5px; font-weight:700; color:var(--text-muted); letter-spacing:0.05em; text-transform:uppercase;}
+  .echarge-spec-value{font-size:14px; font-weight:700; color:var(--text); margin-top:3px;}
+  .echarge-code{margin-top:11px; background:#f0fdfa; border:1px dashed #67e8f9; border-radius:9px; padding:9px 11px; display:flex; align-items:center; justify-content:space-between;}
+  .echarge-code-label{font-size:11px; color:var(--accent-text); font-weight:600;}
+  .echarge-code-value{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:14px; font-weight:700; color:var(--accent-text); letter-spacing:0.05em;}
+
+  /* === Zugang & Codes === */
+  .zc-section{margin:18px 16px 0;}
+  .zc-section:first-of-type{margin-top:14px;}
+  .zc-section-title{font-size:10.5px; font-weight:700; color:var(--text-muted); letter-spacing:0.06em; text-transform:uppercase; display:flex; align-items:center; gap:6px; margin-bottom:8px;}
+  .zc-section-bar{flex:1; height:1px; background:var(--border);}
+  .wifi-card{background:linear-gradient(135deg, var(--accent) 0%, #0e9488 100%); color:#fff; border-radius:16px; padding:16px; box-shadow:0 8px 22px -8px rgba(15,118,110,0.4);}
+  .wifi-row{display:flex; align-items:center; gap:11px; padding:6px 0;}
+  .wifi-row + .wifi-row{border-top:1px solid rgba(255,255,255,0.18); margin-top:4px; padding-top:10px;}
+  .wifi-icon{font-size:19px;}
+  .wifi-label-block{flex:1;}
+  .wifi-label{font-size:9.5px; font-weight:700; opacity:0.85; letter-spacing:0.06em; text-transform:uppercase;}
+  .wifi-value{font-size:14.5px; font-weight:700; margin-top:2px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:0.02em;}
+  .wifi-copy{background:rgba(255,255,255,0.22); border:none; color:#fff; padding:6px 11px; border-radius:8px; font-size:11.5px; font-weight:600; cursor:pointer;}
+  .wifi-qr-block{margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.22); display:flex; align-items:center; gap:14px;}
+  .wifi-qr-img{width:96px; height:96px; flex-shrink:0; background:#fff; padding:8px; border-radius:11px; display:flex; align-items:center; justify-content:center;}
+  .wifi-qr-img img{width:100%; height:100%; display:block;}
+  .wifi-qr-text{flex:1;}
+  .wifi-qr-text strong{font-weight:700; font-size:13.5px;}
+  .wifi-qr-text p{margin:5px 0 0; font-size:11.5px; opacity:0.92; line-height:1.4;}
+  .keybox-card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px;}
+  .keybox-photo{width:100%; height:150px; border-radius:11px; background-size:cover; background-position:center; border:1px solid var(--border); position:relative;}
+  .keybox-photo-tag{position:absolute; top:8px; left:8px; background:rgba(255,255,255,0.95); backdrop-filter:blur(6px); font-size:11px; font-weight:600; color:var(--text); padding:3px 8px; border-radius:5px;}
+  .keybox-headline{margin-top:14px; font-size:11px; font-weight:700; color:var(--text-muted); letter-spacing:0.05em; text-transform:uppercase;}
+  .keybox-code-display{margin:8px 0 10px; display:flex; gap:8px; justify-content:center;}
+  .keybox-digit{width:46px; height:60px; border-radius:11px; background:linear-gradient(180deg, #f8fafc, #e2e8f0); border:1px solid var(--border-strong); display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:700; color:var(--text); font-family:ui-monospace,SFMono-Regular,Menlo,monospace; box-shadow:0 4px 10px -3px rgba(15,23,42,0.12);}
+  .keybox-actions{display:flex; gap:8px; margin-top:4px;}
+  .keybox-btn{flex:1; background:var(--surface-soft); border:1px solid var(--border); border-radius:9px; padding:9px; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer;}
+  .keybox-btn.primary{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .keybox-note{margin-top:14px; background:var(--surface-soft); border:1px solid var(--border); border-radius:10px; padding:11px 12px;}
+  .keybox-note-head{font-size:10.5px; font-weight:700; color:var(--text-muted); letter-spacing:0.06em; text-transform:uppercase; margin-bottom:5px;}
+  .keybox-note p{margin:0; font-size:12.5px; line-height:1.5; color:var(--text);}
+  .checkin-card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px;}
+  .checkin-photo{width:100%; height:130px; border-radius:11px; background-size:cover; background-position:center; border:1px solid var(--border); position:relative; margin-bottom:12px;}
+  .checkin-photo-tag{position:absolute; top:8px; left:8px; background:rgba(255,255,255,0.95); backdrop-filter:blur(6px); font-size:11px; font-weight:600; color:var(--text); padding:3px 8px; border-radius:5px;}
+  .checkin-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:11px;}
+  .checkin-cell{background:var(--surface-soft); border:1px solid var(--border); border-radius:10px; padding:10px;}
+  .checkin-cell-label{font-size:9.5px; font-weight:700; color:var(--text-muted); letter-spacing:0.06em; text-transform:uppercase;}
+  .checkin-cell-date{font-size:14.5px; font-weight:700; margin-top:4px;}
+  .checkin-cell-time{font-size:12px; color:var(--text-muted); margin-top:2px;}
+  .checkin-extend-btn{width:100%; background:var(--upsell-soft); color:var(--upsell); border:1px solid #ddd6fe; border-radius:10px; padding:10px; font-size:12.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer;}
+
+  /* === Hausordnung === */
+  .rules-intro{margin:14px 16px 4px; font-size:12.5px; color:var(--text-muted); line-height:1.45;}
+  .rules-meta{display:flex; gap:10px; align-items:center; justify-content:center; margin:14px 16px 8px; font-size:11px; color:var(--text-muted);}
+  .rules-meta-pill{background:var(--surface-soft); border:1px solid var(--border); padding:3px 8px; border-radius:6px; font-weight:600; color:var(--text-muted);}
+  .rules-list{margin:8px 16px 0; background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden;}
+  .rule-item{border-bottom:1px solid var(--border); background:var(--surface);}
+  .rule-item:last-child{border-bottom:none;}
+  .rule-head{display:flex; align-items:center; gap:11px; padding:13px 13px; cursor:pointer;}
+  .rule-icon{width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; background:var(--surface-soft); border:1px solid var(--border);}
+  .rule-text{flex:1; min-width:0;}
+  .rule-title{font-size:13.5px; font-weight:700; line-height:1.2;}
+  .rule-sub{font-size:11.5px; margin-top:3px; line-height:1.3; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .rule-pill{flex-shrink:0; font-size:10px; font-weight:700; padding:3px 8px; border-radius:5px; letter-spacing:0.04em; text-transform:uppercase;}
+  .rule-pill.deny{background:#fee2e2; color:#991b1b;}
+  .rule-pill.ok{background:#dcfce7; color:#166534;}
+  .rule-pill.ask{background:#fef3c7; color:#92400e;}
+  .rule-chev{color:var(--text-dim); font-size:14px; flex-shrink:0; transition:transform 0.15s;}
+  .rule-item.open .rule-chev{transform:rotate(90deg);}
+  .rule-body{padding:0 13px 14px; margin-top:-2px; font-size:12.5px; color:var(--text); line-height:1.5; display:none;}
+  .rule-item.open .rule-body{display:block;}
+  .rule-body p{margin:0 0 8px;}
+  .rule-body p:last-child{margin-bottom:0;}
+  .rule-body strong{font-weight:600;}
+  .rule-body .quote-box{background:var(--surface-soft); border-left:3px solid var(--accent); border-radius:6px; padding:9px 11px; margin:6px 0; font-size:12px; color:var(--text);}
+
+  /* === Universelle Callouts (Tipp / Wichtig / Info) — subtil === */
+  .callout{display:flex; gap:9px; align-items:flex-start; background:var(--surface-soft); border-left:3px solid var(--border-strong); border-radius:6px; padding:9px 11px; margin:8px 0; font-size:12.5px; line-height:1.5; color:var(--text);}
+  .callout-icon{font-size:13px; flex-shrink:0; line-height:1.4; opacity:0.7;}
+  .callout-body{flex:1; min-width:0;}
+  .callout-label{font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; margin-bottom:2px; color:var(--text-muted);}
+  .callout p{margin:0; font-size:12.5px; color:var(--text);}
+  .callout.tip{border-left-color:#eab308;}
+  .callout.warn{border-left-color:#dc2626;}
+  .callout.info{border-left-color:#3b82f6;}
+  .rules-footer{margin:18px 16px 0; padding:13px 14px; background:var(--surface-soft); border:1px solid var(--border); border-radius:11px; font-size:12.5px; color:var(--text); line-height:1.45; text-align:center; font-style:italic;}
+
+  /* === Welcome-Brief === */
+  .letter-hero{height:180px; background-size:cover; background-position:center; position:relative; background-image:url('https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=900&auto=format&fit=crop');}
+  .letter-hero-overlay{position:absolute; inset:0; background:linear-gradient(180deg, rgba(15,23,42,0.0) 30%, rgba(15,23,42,0.55) 100%);}
+  .letter-back{position:absolute; top:14px; left:14px; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.95); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; font-size:14px; color:#0f172a; z-index:2; cursor:pointer;}
+  .letter-title-block{position:absolute; left:18px; right:18px; bottom:14px; color:#fff; z-index:2;}
+  .letter-eyebrow{font-size:10.5px; font-weight:700; opacity:0.9; letter-spacing:0.06em; text-transform:uppercase;}
+  .letter-headline{font-size:23px; font-weight:700; line-height:1.15; margin-top:4px; font-family:Georgia, "Times New Roman", serif; font-style:italic;}
+  .letter-body{padding:18px 22px 14px; font-size:13px; color:var(--text); line-height:1.6;}
+  .letter-body p{margin:0 0 12px;}
+  .letter-body p:last-of-type{margin-bottom:0;}
+  .letter-body p strong{font-weight:600;}
+  .letter-signature{margin:14px 22px 4px; padding-top:14px; border-top:1px solid var(--border); display:flex; align-items:center; gap:11px;}
+  .letter-sig-photo{width:46px; height:46px; border-radius:50%; background-size:cover; background-position:center; border:2px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,0.1); flex-shrink:0; background-image:url('https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop');}
+  .letter-sig-text{flex:1;}
+  .letter-sig-from{font-size:11px; color:var(--text-muted); letter-spacing:0.04em; text-transform:uppercase; font-weight:600;}
+  .letter-sig-name{font-size:14.5px; font-weight:700; margin-top:2px; font-family:Georgia, "Times New Roman", serif; font-style:italic;}
+  .letter-meta{margin:14px 22px 0; display:flex; gap:6px; flex-wrap:wrap;}
+  .letter-meta-pill{font-size:10.5px; font-weight:600; background:var(--surface-soft); border:1px solid var(--border); color:var(--text-muted); padding:3px 8px; border-radius:6px;}
+
+  /* === Services + POI === */
+  .cat-chips{display:flex; gap:6px; padding:10px 16px 4px; overflow-x:auto;}
+  .cat-chips::-webkit-scrollbar{display:none;}
+  .cat-chip{flex-shrink:0; font-size:11.5px; font-weight:600; padding:6px 12px; border-radius:14px; background:var(--surface-soft); border:1px solid var(--border); color:var(--text-muted); cursor:pointer;}
+  .cat-chip.active{background:var(--upsell); color:#fff; border-color:var(--upsell);}
+  .svc-list{padding:8px 16px 20px; display:flex; flex-direction:column; gap:10px;}
+  .svc-card{display:flex; gap:11px; background:var(--surface); border:1px solid var(--border); border-radius:15px; padding:11px; box-shadow:0 8px 20px -16px rgba(15,23,42,0.4); cursor:pointer;}
+  .svc-card-img{width:86px; height:86px; flex-shrink:0; border-radius:11px; background-size:cover; background-position:center; position:relative;}
+  .svc-card-tag{position:absolute; top:5px; left:5px; background:var(--upsell); color:#fff; font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px; letter-spacing:0.04em; text-transform:uppercase;}
+  .svc-card-body{flex:1; min-width:0; display:flex; flex-direction:column;}
+  .svc-card-title{font-size:13.5px; font-weight:700; line-height:1.2;}
+  .svc-card-desc{font-size:11.5px; color:var(--text-muted); margin-top:3px; line-height:1.35; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;}
+  .svc-card-row{display:flex; align-items:center; justify-content:space-between; margin-top:auto; padding-top:7px;}
+  .svc-card-price{font-size:13px; font-weight:700; color:var(--accent-text);}
+  .svc-card-cta{font-size:11.5px; font-weight:700; color:var(--upsell);}
+  .svc-detail-hero{height:160px; background-size:cover; background-position:center; position:relative;}
+  .svc-detail-back{position:absolute; top:14px; left:14px; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.95); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; font-size:14px; color:#0f172a; cursor:pointer;}
+  .svc-detail-tag{position:absolute; top:14px; right:14px; background:var(--upsell); color:#fff; font-size:10px; font-weight:700; padding:4px 9px; border-radius:5px; letter-spacing:0.04em; text-transform:uppercase;}
+  .svc-detail-info{padding:14px 18px 6px;}
+  .svc-detail-title{font-size:25px; font-weight:600; line-height:1.15; font-family:"Newsreader", Georgia, serif;}
+  .svc-detail-meta{display:flex; align-items:center; gap:9px; margin-top:6px;}
+  .svc-detail-price-big{font-size:18px; font-weight:700; color:var(--accent-text);}
+  .svc-detail-meta-text{font-size:11.5px; color:var(--text-muted);}
+  .svc-detail-desc{font-size:13px; color:var(--text); margin-top:10px; line-height:1.5;}
+  .anfrage-form{margin:14px 18px 0; padding:14px; background:var(--surface-soft); border:1px solid var(--border); border-radius:15px;}
+  .anfrage-form-title{font-size:11.5px; font-weight:700; color:var(--text-muted); letter-spacing:0.05em; text-transform:uppercase; margin-bottom:10px;}
+  .form-row{margin-bottom:11px;}
+  .form-row:last-of-type{margin-bottom:0;}
+  .form-label{font-size:12px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:6px; margin-bottom:5px;}
+  .form-label .opt{font-size:10px; font-weight:600; color:var(--text-muted); margin-left:4px;}
+  .form-input, .form-textarea{width:100%; background:#fff; border:1px solid var(--border); border-radius:11px; padding:10px 11px; font-size:12.5px; color:var(--text); font-family:inherit;}
+  .form-textarea{resize:none; min-height:50px;}
+  .form-row-double{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .form-primary-btn{width:calc(100% - 36px); margin:14px 18px 18px; padding:13px; background:var(--upsell); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:700; box-shadow:0 10px 20px -12px rgba(143,92,44,0.7); cursor:pointer;}
+  .form-hint{margin:6px 18px 0; font-size:11px; color:var(--text-muted); line-height:1.4; text-align:center;}
+
+  .poi-section-header{margin:16px 16px 8px; font-size:10.5px; font-weight:700; color:var(--text-muted); letter-spacing:0.1em; text-transform:uppercase; display:flex; align-items:center; gap:6px;}
+  .poi-section-header:first-child{margin-top:6px;}
+  .poi-list{display:flex; flex-direction:column; gap:9px; padding:0 16px;}
+  .poi-card{display:flex; gap:11px; background:var(--surface); border:1px solid var(--border); border-radius:15px; padding:11px; cursor:pointer; box-shadow:0 8px 20px -16px rgba(15,23,42,0.4);}
+  .poi-card-img{width:82px; height:82px; flex-shrink:0; border-radius:11px; background-size:cover; background-position:center; position:relative;}
+  .poi-card-discount{position:absolute; bottom:5px; left:5px; right:5px; background:var(--poi); color:#fff; font-size:10px; font-weight:700; padding:3px 5px; border-radius:5px; text-align:center;}
+  .poi-card-body{flex:1; min-width:0; display:flex; flex-direction:column;}
+  .poi-card-title{font-size:13.5px; font-weight:700; line-height:1.2;}
+  .poi-card-tags{display:flex; gap:5px; margin-top:4px; flex-wrap:wrap;}
+  .poi-card-tag{font-size:9.5px; font-weight:600; color:var(--text-muted); background:var(--surface-soft); border:1px solid var(--border); padding:1.5px 6px; border-radius:4px; letter-spacing:0.03em; text-transform:uppercase;}
+  .poi-card-distance{font-size:11px; color:var(--text-muted); margin-top:auto; padding-top:5px;}
+  .poi-detail-hero{height:170px; background-size:cover; background-position:center; position:relative;}
+  .poi-detail-info{padding:14px 18px 4px;}
+  .poi-detail-tags{display:flex; gap:5px; margin-top:6px; flex-wrap:wrap;}
+  .poi-detail-distance-row{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-muted); margin-top:8px;}
+  .poi-detail-desc{font-size:13px; color:var(--text); margin-top:10px; line-height:1.5;}
+  .poi-cta-section-title{margin:16px 18px 8px; font-size:10.5px; font-weight:700; color:var(--text-muted); letter-spacing:0.05em; text-transform:uppercase;}
+  .poi-cta-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 16px 18px;}
+  .poi-cta-tile{background:var(--surface); border:1px solid var(--border); border-radius:13px; padding:11px; display:flex; flex-direction:column; gap:5px; min-height:78px; cursor:pointer;}
+  .poi-cta-tile.primary{background:var(--poi-soft); border-color:#bfd7e4;}
+  .poi-cta-icon{width:30px; height:30px; border-radius:8px; background:#fff; display:flex; align-items:center; justify-content:center; font-size:15px; color:var(--poi); box-shadow:0 2px 5px rgba(0,0,0,0.05);}
+  .poi-cta-title-text{font-size:12px; font-weight:700; line-height:1.2;}
+  .poi-cta-sub{font-size:10.5px; color:var(--text-muted); line-height:1.3;}
+  .poi-cta-tile.primary .poi-cta-sub{color:#0e7490;}
+  .poi-cta-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; font-weight:700; color:var(--poi); background:#fff; border:1px dashed #bfd7e4; padding:5px 8px; border-radius:7px; margin-top:3px; text-align:center; letter-spacing:0.05em;}
+
+  /* === Generic Detail-List === */
+  .gen-section-header{margin:16px 16px 8px; font-size:10.5px; font-weight:700; color:var(--text-muted); letter-spacing:0.06em; text-transform:uppercase; display:flex; align-items:center; gap:8px;}
+  .gen-section-header:first-child{margin-top:6px;}
+  .gen-section-count{background:var(--surface-soft); border:1px solid var(--border); color:var(--text-muted); padding:2px 7px; border-radius:5px; font-size:10px; font-weight:700;}
+  .gen-list{display:flex; flex-direction:column; gap:8px; padding:0 16px;}
+  .gen-card{display:flex; gap:11px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:11px; align-items:center; box-shadow:0 8px 20px -16px rgba(15,23,42,0.35);}
+  .gen-card.expandable{display:block; padding:0;}
+  .gen-card-head{display:flex; gap:11px; padding:10px; align-items:center; cursor:pointer;}
+  .gen-card-chev{color:var(--text-dim); font-size:15px; flex-shrink:0; transition:transform 0.15s; line-height:1;}
+  .gen-card.open .gen-card-chev{transform:rotate(90deg);}
+  .gen-card-detail{display:none;}
+  .gen-card.open .gen-card-detail{display:block; padding:0 12px 12px; border-top:1px solid var(--border);}
+  .gen-card-icon{width:46px; height:46px; flex-shrink:0; border-radius:11px; background:var(--surface-soft); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:22px;}
+  .gen-card-icon.photo{background-size:cover; background-position:center; border:none;}
+  .gen-card-body{flex:1; min-width:0;}
+  .gen-card-title{font-size:13.5px; font-weight:700; line-height:1.2;}
+  .gen-card-sub{font-size:11.5px; color:var(--text-muted); margin-top:3px; line-height:1.3;}
+  .gen-card-side{display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0;}
+  .gen-card-pill{font-size:10px; font-weight:700; padding:3px 7px; border-radius:5px; letter-spacing:0.04em; text-transform:uppercase;}
+  .pill-code{background:var(--accent-soft); color:var(--accent-text);}
+  .pill-open{background:#dcfce7; color:#166534;}
+  .pill-time{background:var(--surface-soft); color:var(--text-muted); border:1px solid var(--border);}
+  .pill-247{background:#fef3c7; color:#92400e;}
+  .gen-card-cta{font-size:11px; color:var(--text-dim); font-weight:600; cursor:pointer;}
+
+  /* Geräte-Accordion */
+  .device-accordion{background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin:0 16px;}
+  .device-item{border-bottom:1px solid var(--border);}
+  .device-item:last-child{border-bottom:none;}
+  .device-head{display:flex; align-items:center; gap:11px; padding:11px 12px; cursor:pointer;}
+  .device-thumb{width:42px; height:42px; flex-shrink:0; border-radius:9px; background-size:cover; background-position:center; background-color:var(--surface-soft); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:20px;}
+  .device-body{flex:1; min-width:0;}
+  .device-title{font-size:13.5px; font-weight:700; line-height:1.2;}
+  .device-meta{font-size:11.5px; color:var(--text-muted); margin-top:2px;}
+  .device-chev{color:var(--text-dim); font-size:14px; flex-shrink:0; transition:transform 0.15s;}
+  .device-item.open .device-chev{transform:rotate(90deg);}
+  .device-detail{padding:0 12px 14px 65px; font-size:12.5px; color:var(--text); line-height:1.5; display:none;}
+  .device-item.open .device-detail{display:block;}
+  .device-step-list{margin:0; padding:0; list-style:none; counter-reset:step;}
+  .device-step{counter-increment:step; position:relative; padding:6px 0 6px 26px; border-top:1px solid var(--border);}
+  .device-step:first-child{border-top:none; padding-top:2px;}
+  .device-step::before{content:counter(step); position:absolute; left:0; top:7px; width:18px; height:18px; border-radius:50%; background:var(--accent); color:#fff; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center;}
+  .device-photo-row{display:flex; gap:6px; margin-top:8px; overflow-x:auto;}
+  .device-photo-row::-webkit-scrollbar{display:none;}
+  .device-photo{width:90px; height:65px; flex-shrink:0; border-radius:7px; background-size:cover; background-position:center; border:1px solid var(--border);}
+  .inv-list-card{background:var(--surface); border:1px solid var(--border); border-radius:12px; margin:0 16px 8px;}
+  .inv-list-head{padding:11px 12px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border);}
+  .inv-list-icon{width:32px; height:32px; border-radius:9px; background:var(--surface-soft); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0;}
+  .inv-list-title{font-size:13px; font-weight:700; line-height:1.2; flex:1;}
+  .inv-list-count{font-size:10px; font-weight:700; color:var(--text-muted); background:var(--surface-soft); padding:2px 6px; border-radius:5px;}
+  .inv-list-body{padding:8px 12px 10px;}
+  .inv-list-body ul{margin:0; padding-left:18px; list-style:disc;}
+  .inv-list-body li{font-size:12px; color:var(--text); line-height:1.5; margin:2px 0;}
+
+  /* === Problem melden === */
+  .pm-toggle{display:grid; grid-template-columns:1fr 1fr; margin:14px 16px 0; background:var(--surface-soft); border:1px solid var(--border); border-radius:11px; padding:3px; gap:3px;}
+  .pm-toggle-btn{text-align:center; padding:8px; font-size:12px; font-weight:600; border-radius:8px; color:var(--text-muted); cursor:pointer;}
+  .pm-toggle-btn.active{background:var(--surface); color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+  .pm-help-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:14px 16px 0;}
+  .pm-help-card{background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:12px; display:flex; flex-direction:column; gap:5px; min-height:84px; cursor:pointer;}
+  .pm-help-icon{width:30px; height:30px; border-radius:8px; background:var(--warm-soft); color:#92400e; display:flex; align-items:center; justify-content:center; font-size:15px;}
+  .pm-help-title{font-size:12.5px; font-weight:700; line-height:1.2;}
+  .pm-help-sub{font-size:10.5px; color:var(--text-muted); line-height:1.3;}
+  .pm-fallback{margin:18px 16px 0; padding:12px 14px; background:var(--warm-soft); border:1px solid #fde68a; border-radius:11px; font-size:12px; color:#78350f; line-height:1.4; display:flex; align-items:center; gap:10px;}
+  .pm-fallback-arrow{font-size:18px;}
+  .pm-form{margin:14px 18px 0;}
+  .pm-photo-uploader{display:flex; gap:6px; flex-wrap:wrap;}
+  .pm-photo-slot{width:64px; height:64px; background:var(--surface-soft); border:1.5px dashed var(--border-strong); border-radius:9px; display:flex; align-items:center; justify-content:center; color:var(--text-dim); font-size:18px;}
+  .pm-photo-slot.filled{background-size:cover; background-position:center; border:none;}
+
+  /* === Feedback === */
+  .fb-section{margin:18px 16px 0;}
+  .fb-section-title{font-size:11px; font-weight:700; color:var(--text-muted); letter-spacing:0.06em; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:6px;}
+  .fb-section-bar{flex:1; height:1px; background:var(--border);}
+  .fb-private-card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px;}
+  .fb-stars{display:flex; gap:6px; justify-content:center; margin:10px 0 14px;}
+  .fb-star{font-size:30px; color:#facc15; filter:drop-shadow(0 2px 3px rgba(250,204,21,0.3)); cursor:pointer;}
+  .fb-star.empty{color:#e2e8f0; filter:none;}
+  .fb-stars-label{font-size:12px; color:var(--text-muted); text-align:center; margin-bottom:6px;}
+  .fb-public-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .fb-platform-card{background:var(--surface); border:1px solid var(--border); border-radius:11px; padding:11px 12px; display:flex; align-items:center; gap:10px; cursor:pointer;}
+  .fb-platform-icon{width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; color:#fff; font-weight:700;}
+  .fb-platform-icon.airbnb{background:#FF5A5F;}
+  .fb-platform-icon.booking{background:#003580;}
+  .fb-platform-icon.google{background:#4285F4;}
+  .fb-platform-icon.edomizil{background:#2c5e1a;}
+  .fb-platform-name{font-size:12px; font-weight:700; line-height:1.2;}
+  .fb-platform-sub{font-size:10px; color:var(--text-muted); margin-top:1px;}
+
+  /* === SOS === */
+  .sos-intro{margin:14px 16px 0; background:linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border:1px solid #fecaca; border-radius:14px; padding:14px;}
+  .sos-intro-headline{font-size:13px; font-weight:700; color:#991b1b; text-align:center; line-height:1.4;}
+  .sos-intro-address-block{margin-top:11px; padding:10px 12px; background:#fff; border:1px solid #fecaca; border-radius:10px;}
+  .sos-intro-address-label{font-size:9.5px; font-weight:700; color:#991b1b; letter-spacing:0.06em; text-transform:uppercase; text-align:center;}
+  .sos-intro-address{font-size:16px; font-weight:700; color:var(--text); text-align:center; margin-top:5px; line-height:1.3;}
+  .sos-intro-copy{width:100%; margin-top:10px; background:#dc2626; color:#fff; border:none; border-radius:9px; padding:10px; font-size:12.5px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer;}
+  .sos-section-title{margin:20px 16px 10px; font-size:10.5px; font-weight:700; color:var(--text-muted); letter-spacing:0.06em; text-transform:uppercase; display:flex; align-items:center; gap:6px;}
+  .sos-section-title::after{content:""; flex:1; height:1px; background:var(--border);}
+  .sos-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:0 16px;}
+  .sos-btn{border-radius:14px; padding:14px 12px; color:#fff; display:flex; flex-direction:column; align-items:center; gap:5px; text-align:center; box-shadow:0 6px 16px -6px rgba(220,38,38,0.4); min-height:108px; justify-content:center; cursor:pointer;}
+  .sos-btn.red{background:linear-gradient(135deg, #dc2626, #b91c1c);}
+  .sos-btn.blue{background:linear-gradient(135deg, #2563eb, #1d4ed8); box-shadow:0 6px 16px -6px rgba(37,99,235,0.4);}
+  .sos-btn-icon{font-size:24px;}
+  .sos-btn-number{font-size:30px; font-weight:700; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; line-height:1;}
+  .sos-btn-label{font-size:11px; font-weight:600; opacity:0.95; line-height:1.25; margin-top:3px;}
+  .sos-behavior{margin:0 16px; background:var(--surface); border:1px solid var(--border); border-radius:13px; padding:14px 16px;}
+  .sos-behavior ol{margin:0; padding-left:0; list-style:none; counter-reset:bstep;}
+  .sos-behavior li{counter-increment:bstep; position:relative; padding:7px 0 7px 32px; font-size:12.5px; line-height:1.4; border-top:1px solid var(--border);}
+  .sos-behavior li:first-child{border-top:none; padding-top:2px;}
+  .sos-behavior li::before{content:counter(bstep); position:absolute; left:0; top:8px; width:22px; height:22px; border-radius:50%; background:#dc2626; color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center;}
+  .sos-contacts{margin:0 16px; display:flex; flex-direction:column; gap:8px;}
+  .sos-contact-card{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:11px 12px; display:flex; align-items:center; gap:11px;}
+  .sos-contact-icon{width:42px; height:42px; border-radius:11px; background:var(--surface-soft); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;}
+  .sos-contact-icon.host{background:#dbeafe; border-color:#bfdbfe; color:#1e40af; font-weight:700;}
+  .sos-contact-body{flex:1; min-width:0;}
+  .sos-contact-name{font-size:13.5px; font-weight:700; line-height:1.2;}
+  .sos-contact-meta{font-size:11.5px; color:var(--text-muted); margin-top:2px;}
+  .sos-contact-actions{display:flex; gap:6px; flex-shrink:0;}
+  .sos-contact-btn{width:36px; height:36px; border-radius:10px; background:#dcfce7; color:#166534; display:flex; align-items:center; justify-content:center; font-size:15px; border:1px solid #86efac; cursor:pointer;}
+  .sos-warning{margin:0 16px; padding:12px 14px; background:#fef3c7; border:1px solid #fde68a; border-radius:11px; font-size:11.5px; color:#78350f; line-height:1.45; display:flex; gap:10px; align-items:flex-start;}
+  .sos-warning-icon{font-size:18px; flex-shrink:0;}
+  .sos-warning strong{color:#78350f; font-weight:700;}
+  .sos-disclaimer{margin:14px 16px 0; padding:11px 13px; background:var(--surface-soft); border:1px solid var(--border); border-radius:10px; font-size:10.5px; color:var(--text-muted); line-height:1.45; text-align:center;}
+
+  /* Toast notification */
+  .toast{position:absolute; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:rgba(15,23,42,0.92); color:#fff; padding:11px 18px; border-radius:14px; font-size:12.5px; font-weight:600; z-index:100; opacity:0; transition:transform 0.28s ease, opacity 0.22s ease; pointer-events:none;}
+  .toast.show{transform:translateX(-50%) translateY(0); opacity:1;}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="notch"></div>
+      <div class="status-bar">
+        <div>9:41</div>
+        <div class="status-icons">📶 📡 🔋</div>
+      </div>
+
+      <!-- ════════ HOME ════════ -->
+      <div class="home" id="home">
+
+        <div class="hero">
+          <div class="hero-icons">
+            <div class="hero-icon lang" data-open="lang">🇩🇪 DE</div>
+            <div class="hero-icon" data-open="msg">💬<span class="badge">1</span></div>
+          </div>
+          <div class="hero-content">
+            <div class="hero-property">Chalet Bergblick · Flims-Laax</div>
+            <div class="hero-title">Willkommen, Familie Anicic 👋</div>
+          </div>
+        </div>
+
+        <div class="welcome-card" data-open="letter">
+          <div class="welcome-host-avatar-single"></div>
+          <div class="welcome-card-text-block">
+            <div class="welcome-card-eyebrow">Brief vom Gastgeber</div>
+            <div class="welcome-card-title">Schön, dass Sie da sind — weiterlesen</div>
+          </div>
+          <div class="welcome-card-cta">›</div>
+        </div>
+
+        <div class="strip-box">
+          <div class="strip-title">📍 Lageplan &amp; Anreise</div>
+          <div class="strip-row">
+            <div class="strip-pill" data-open="lp">🧭 Anreise</div>
+            <div class="strip-pill" data-open="lp">🅿️ Parken</div>
+            <div class="strip-pill" data-open="lp">⚡ E-Auto</div>
+          </div>
+        </div>
+
+        <div class="strip-box">
+          <div class="strip-title">🔐 Zugang &amp; Codes</div>
+          <div class="strip-row">
+            <div class="strip-pill" data-open="zc">📶 WLAN</div>
+            <div class="strip-pill" data-open="zc">🔑 Schlüssel</div>
+            <div class="strip-pill" data-open="zc">⏰ Check-out</div>
+          </div>
+        </div>
+
+        <div class="home-section-title">✨ Entdecken &amp; erleben</div>
+
+        <div class="xl-tile poi" data-open="poi">
+          <div class="xl-arrow">›</div>
+          <div class="xl-overlay">
+            <div class="xl-title">Ort &amp; Umgebung</div>
+            <div class="xl-teaser">Bündner Küche · Kino-Familienrabatt · Wellness · Bäckerei &amp; mehr</div>
+            <div class="xl-cta-row">
+              <span class="xl-chip">🍽️ Restaurants</span>
+              <span class="xl-chip">🎟️ Erlebnisse</span>
+              <span class="xl-chip">🏔️ Natur</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="xl-tile svc" data-open="svc">
+          <div class="xl-arrow">›</div>
+          <div class="xl-overlay">
+            <div class="xl-title">Services &amp; Extras</div>
+            <div class="xl-teaser">Frühstück CHF 25 · Late-Checkout · Fondue-Set · Reinigung · Wäsche</div>
+            <div class="xl-cta-row">
+              <span class="xl-chip">🥐 Kulinarik</span>
+              <span class="xl-chip">🛏️ Komfort</span>
+              <span class="xl-chip">🧺 Service</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="home-section-title" style="margin-top:24px;">📋 Gut zu wissen</div>
+
+        <div class="small-grid" style="margin-top:8px;">
+          <div class="small-tile t-rules" data-open="rules">
+            <div class="small-tile-icon">📜</div>
+            <div class="small-tile-content">
+              <div class="small-tile-title">Hausordnung</div>
+              <div class="small-tile-sub">Ruhezeiten · Haustiere · Sauberkeit</div>
+            </div>
+          </div>
+          <div class="small-tile t-amenities" data-open="amen">
+            <div class="small-tile-icon">🛁</div>
+            <div class="small-tile-content">
+              <div class="small-tile-title">Annehmlichkeiten</div>
+              <div class="small-tile-sub">Sauna · Pool · Skiraum · Grill</div>
+            </div>
+          </div>
+          <div class="small-tile t-inventory" data-open="inv">
+            <div class="small-tile-icon">📦</div>
+            <div class="small-tile-content">
+              <div class="small-tile-title">Geräte &amp; Inventar</div>
+              <div class="small-tile-sub">Kaffee · TV · Heizung · Küche</div>
+            </div>
+          </div>
+          <div class="small-tile t-care" data-open="care">
+            <div class="small-tile-icon">🏥</div>
+            <div class="small-tile-content">
+              <div class="small-tile-title">Versorgung</div>
+              <div class="small-tile-sub">Apotheke · Spital · Supermarkt</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <div class="action-card" data-open="problem">
+            <div class="action-icon">📷</div>
+            <div class="action-text">
+              <div class="action-title">Problem melden</div>
+              <div class="action-sub">Foto an den Host</div>
+            </div>
+          </div>
+          <div class="action-card" data-open="feedback">
+            <div class="action-icon feedback">⭐</div>
+            <div class="action-text">
+              <div class="action-title">Feedback</div>
+              <div class="action-sub">Bewertung &amp; Sterne</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sos-final" data-open="sos">
+          <div class="sos-icon">🚨</div>
+          <div class="sos-text">
+            <div class="sos-title">SOS · Notfall</div>
+            <div class="sos-sub">144 · 117 · 118 · Host · Adresse für Notrufe</div>
+          </div>
+          <div class="sos-arrow">›</div>
+        </div>
+
+        <div class="footer-meta">
+          QR_Gast · Inhalte vom Host · DE/EN/FR/IT/RM
+        </div>
+      </div>
+
+      <!-- ════════ Sheet-Overlay (gemeinsam) ════════ -->
+      <div class="sheet-overlay" id="overlay" data-close></div>
+
+      <!-- ════════ SHEET: Sprache ════════ -->
+      <div class="sheet h-62" id="sheet-lang">
+        <div class="sheet-handle" data-close></div>
+        <div class="sheet-header">
+          <div class="sheet-title">🌍 Sprache wählen</div>
+          <div class="sheet-close" data-close>✕</div>
+        </div>
+        <div class="sheet-body">
+          <div class="lang-detect">
+            <span style="font-size:16px;">💡</span>
+            <div>Browser-Sprache erkannt: <strong>Deutsch</strong> — bereits aktiv.</div>
+          </div>
+          <div class="lang-list">
+            <div class="lang-row"><div class="lang-flag">🇩🇪</div><div class="lang-name"><div class="lang-name-primary">Deutsch</div><div class="lang-name-native">Deutsch</div></div><div class="lang-check">✓</div></div>
+            <div class="lang-row"><div class="lang-flag">🇬🇧</div><div class="lang-name"><div class="lang-name-primary">Englisch</div><div class="lang-name-native">English</div></div><div class="lang-check empty">✓</div></div>
+            <div class="lang-row"><div class="lang-flag">🇫🇷</div><div class="lang-name"><div class="lang-name-primary">Französisch</div><div class="lang-name-native">Français</div></div><div class="lang-check empty">✓</div></div>
+            <div class="lang-row"><div class="lang-flag">🇮🇹</div><div class="lang-name"><div class="lang-name-primary">Italienisch</div><div class="lang-name-native">Italiano</div></div><div class="lang-check empty">✓</div></div>
+            <div class="lang-row"><div class="lang-flag">🏔️</div><div class="lang-name"><div class="lang-name-primary">Rumantsch</div><div class="lang-name-native">Rumantsch</div></div><div class="lang-check empty">✓</div></div>
+          </div>
+          <div class="lang-host-note">Diese 5 Sprachen hat <strong>Familie Bergblick</strong> für diese Wohnung freigeschaltet. Texte, die nicht manuell übersetzt sind, werden automatisch via DeepL übersetzt.</div>
+        </div>
+      </div>
+
+      <!-- ════════ SHEET: Nachrichten ════════ -->
+      <div class="sheet h-94" id="sheet-msg">
+        <div class="sheet-handle" data-close></div>
+        <div class="sheet-header">
+          <div class="sheet-title">💬 Nachrichten</div>
+          <div class="sheet-close" data-close>✕</div>
+        </div>
+        <div class="msg-tabs">
+          <div class="msg-tab active">Alle <span class="count">5</span></div>
+          <div class="msg-tab">Anfragen <span class="count">3</span></div>
+          <div class="msg-tab">Chat <span class="count">2</span></div>
+        </div>
+        <div class="sheet-body">
+          <div class="msg-list">
+            <div class="msg-item unread" data-open="msg-thread">
+              <div class="msg-avatar host">L</div>
+              <div class="msg-body">
+                <div class="msg-row1"><div class="msg-title">🥐 Frühstücksservice</div><div class="msg-time">vor 12 Min</div></div>
+                <div class="msg-preview">„Bestätigt für morgen 8:30 — wird vor die Tür gestellt."</div>
+                <div class="msg-status-row"><span class="msg-pill pill-confirmed">Bestätigt</span><span class="msg-pill pill-info">CHF 25</span></div>
+              </div>
+            </div>
+            <div class="msg-item unread" data-open="msg-thread">
+              <div class="msg-avatar host">L</div>
+              <div class="msg-body">
+                <div class="msg-row1"><div class="msg-title">Familie Bergblick</div><div class="msg-time">vor 35 Min</div></div>
+                <div class="msg-preview">„Klar, der Skiraum-Code ist 9876 — viel Spaß!"</div>
+                <div class="msg-status-row"><span class="msg-pill pill-chat">Chat</span></div>
+              </div>
+            </div>
+            <div class="msg-item" data-open="msg-thread">
+              <div class="msg-avatar">🛏️</div>
+              <div class="msg-body">
+                <div class="msg-row1"><div class="msg-title">⏰ Late Check-out 14:00</div><div class="msg-time">heute 09:14</div></div>
+                <div class="msg-preview">Anfrage gesendet — wartet auf Bestätigung vom Host.</div>
+                <div class="msg-status-row"><span class="msg-pill pill-pending">Wartet</span><span class="msg-pill pill-info">CHF 50</span></div>
+              </div>
+            </div>
+            <div class="msg-item" data-open="msg-thread">
+              <div class="msg-avatar">🍽️</div>
+              <div class="msg-body">
+                <div class="msg-row1"><div class="msg-title">🥘 Fondue-Set komplett</div><div class="msg-time">gestern 20:42</div></div>
+                <div class="msg-preview">„Heute leider ausgebucht — gerne morgen Abend?"</div>
+                <div class="msg-status-row"><span class="msg-pill pill-rejected">Abgelehnt</span></div>
+              </div>
+            </div>
+            <div class="msg-item" data-open="msg-thread">
+              <div class="msg-avatar host">L</div>
+              <div class="msg-body">
+                <div class="msg-row1"><div class="msg-title">🧺 Mid-Stay Reinigung</div><div class="msg-time">Mo 11:20</div></div>
+                <div class="msg-preview">„Bestätigt für Mittwoch 10:00 — wir klingeln vorher kurz."</div>
+                <div class="msg-status-row"><span class="msg-pill pill-confirmed">Bestätigt</span><span class="msg-pill pill-info">CHF 85</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="msg-input-bar">
+          <div class="msg-input">Frage an den Host schreiben…</div>
+          <div class="msg-send">→</div>
+        </div>
+      </div>
+
+      <!-- ════════ SHEET: Nachrichten-Thread ════════ -->
+      <div class="sheet h-96" id="sheet-msg-thread">
+        <div class="thread-header">
+          <div class="thread-back" data-close>‹</div>
+          <div class="thread-headline">
+            <div class="thread-title">🥐 Frühstücksservice</div>
+            <div class="thread-sub">Anfrage · Sa 02.05.</div>
+            <div class="thread-status-row">
+              <span class="msg-pill pill-confirmed">Bestätigt</span>
+              <span class="msg-pill pill-info">CHF 25</span>
+            </div>
+          </div>
+        </div>
+        <div class="thread-body">
+          <div class="thread-system">Anfrage gesendet · 09:14</div>
+          <div class="thread-bubble thread-bubble-guest">Frühstück für morgen 8:30 — gerne mit Honig &amp; glutenfreiem Brot. Danke!<span class="thread-bubble-time">09:14</span></div>
+          <div class="thread-system">Wartet auf Bestätigung</div>
+          <div class="thread-bubble thread-bubble-host">Liebe Familie Anicic, sehr gerne! Honig vom Imker im Dorf liegt mit dabei, glutenfreies Brot bestellen wir heute Abend. Lieferung vor 8:30 vor die Tür.<span class="thread-bubble-time">09:21</span></div>
+          <div class="thread-system">Bestätigt · CHF 25</div>
+          <div class="thread-bubble thread-bubble-guest">Top, vielen Dank! Können wir auch zusätzlich 2 Croissants extra haben?<span class="thread-bubble-time">09:48</span></div>
+          <div class="thread-bubble thread-bubble-host">Klar — wird notiert. Bis morgen!<span class="thread-bubble-time">vor 12 Min</span></div>
+        </div>
+        <div class="msg-input-bar">
+          <div class="msg-input">Antwort schreiben…</div>
+          <div class="msg-send">→</div>
+        </div>
+      </div>
+
+      <!-- ════════ SHEET: Welcome-Brief ════════ -->
+      <div class="sheet h-94" id="sheet-letter">
+        <div class="sheet-handle" data-close></div>
+        <div class="sheet-body" style="padding:0;">
+          <div class="letter-hero">
+            <div class="letter-back" data-close>‹</div>
+            <div class="letter-hero-overlay"></div>
+            <div class="letter-title-block">
+              <div class="letter-eyebrow">🌿 Brief vom Gastgeber</div>
+              <div class="letter-headline">Herzlich willkommen,<br/>Familie Anicic</div>
+            </div>
+          </div>
+          <div class="letter-body">
+            <p>Schön, dass Sie den Weg zu uns ins <strong>Chalet Bergblick</strong> gefunden haben — fernab vom Alltag, mitten in den Bündner Alpen.</p>
+            <p>Wir, <strong>Lukas und Andrea</strong>, haben das Chalet 2019 von meinen Eltern übernommen und mit viel Liebe und einem Hauch Bündner Tradition modernisiert. Seither finden Gäste hier Ruhe, Bergluft und einen Aufenthaltsraum, der zum Verweilen einlädt — sei es auf der Sonnenterrasse, im Wohnzimmer am Kachelofen oder auf einer Skitour direkt vor der Haustür.</p>
+            <p>Auf den nächsten Seiten finden Sie alles Wichtige: WLAN, Schlüsselbox, unsere Lieblings-Wanderwege, ausgewählte Restaurants in Flims-Laax und das Frühstücksangebot, das wir Ihnen morgens gerne vorbeibringen.</p>
+            <p>Sollten Fragen aufkommen — wir sind nur eine Nachricht entfernt. Geniessen Sie Ihre Zeit bei uns!</p>
+            <div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><div class="callout-label">Unser Tipp für den ersten Abend</div><p>Spaziergang zum Caumasee bei Sonnenuntergang — 15 Min bergab vom Chalet. Decken liegen im Eingangsschrank.</p></div></div>
+          </div>
+          <div class="letter-signature">
+            <div class="letter-sig-photo"></div>
+            <div class="letter-sig-text">
+              <div class="letter-sig-from">Eure Gastgeber</div>
+              <div class="letter-sig-name">Lukas &amp; Andrea Cavelti</div>
+            </div>
+          </div>
+          <div class="letter-meta">
+            <span class="letter-meta-pill">Stand: 12. März 2026</span>
+            <span class="letter-meta-pill">DE · auch in EN/FR/IT/RM</span>
+          </div>
+          <div style="height:24px;"></div>
+        </div>
+      </div>
+
+      <!-- ════════ SHEET: Lageplan ════════ -->
+      <div class="sheet h-94" id="sheet-lp">
+        <div class="sheet-handle" data-close></div>
+        <div class="sheet-header">
+          <div class="sheet-title">📍 Lageplan &amp; Anreise</div>
+          <div class="sheet-close" data-close>✕</div>
+        </div>
+        <div class="lp-anchor-row">
+          <div class="lp-anchor active">Adresse</div>
+          <div class="lp-anchor">Parken</div>
+          <div class="lp-anchor">E-Auto</div>
+          <div class="lp-anchor">ÖV</div>
+          <div class="lp-anchor">Taxi</div>
+        </div>
+        <div class="sheet-body">
+          <div class="lp-section">
+            <div class="lp-section-title">📍 Adresse <span class="lp-section-title-bar"></span></div>
+            <div class="address-card">
+              <div class="address-headline">Bergstrasse 42</div>
+              <div class="address-sub">7500 St. Moritz · Schweiz</div>
+              <div class="address-actions">
+                <div class="address-btn" data-toast="Adresse kopiert">📋 Kopieren</div>
+                <div class="address-btn primary" data-toast="Karten-App öffnet…">🗺️ In Karten öffnen</div>
+              </div>
+            </div>
+          </div>
+          <div class="lp-section">
+            <div class="lp-section-title">🅿️ Parken <span class="lp-section-title-bar"></span></div>
+            <div class="lp-card">
+              <div class="parking-spot">
+                <div class="parking-spot-badge"><div class="num">P3</div><div class="label">IHR PLATZ</div></div>
+                <div class="parking-spot-text">
+                  <div class="parking-spot-text-title">Stellplatz P3</div>
+                  <div class="parking-spot-text-sub">Direkt vor dem Haus, beschriftet mit „Apt. 3"</div>
+                </div>
+              </div>
+              <div class="parking-map" style="background-image:url('https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=600&auto=format&fit=crop');">
+                <div class="parking-map-tag">📐 Skizze vom Host</div>
+              </div>
+            </div>
+          </div>
+          <div class="lp-section">
+            <div class="lp-section-title">⚡ E-Auto-Ladestation <span class="lp-section-title-bar"></span></div>
+            <div class="lp-card">
+              <div class="lp-row" style="padding:0;">
+                <div class="lp-row-icon">🔌</div>
+                <div class="lp-row-text">
+                  <div class="lp-row-title">Wallbox neben P3</div>
+                  <div class="lp-row-sub">Direkter Zugang ohne Voranmeldung</div>
+                </div>
+              </div>
+              <div class="echarge-grid">
+                <div class="echarge-spec"><div class="echarge-spec-label">Typ</div><div class="echarge-spec-value">Type 2</div></div>
+                <div class="echarge-spec"><div class="echarge-spec-label">Leistung</div><div class="echarge-spec-value">11 kW</div></div>
+                <div class="echarge-spec"><div class="echarge-spec-label">Tarif</div><div class="echarge-spec-value">CHF 0.45/kWh</div></div>
+                <div class="echarge-spec"><div class="echarge-spec-label">Abrechnung</div><div class="echarge-spec-value">Im Endpreis</div></div>
+              </div>
+              <div class="echarge-code">
+                <div class="echarge-code-label">🔑 Zugangscode</div>
+                <div class="echarge-code-value">7842</div>
+              </div>
+            </div>
+          </div>
+          <div class="lp-section">
+            <div class="lp-section-title">🚌 Öffentlicher Verkehr <span class="lp-section-title-bar"></span></div>
+            <div class="lp-card">
+              <div class="lp-row" style="padding:0;">
+                <div class="lp-row-icon">🚏</div>
+                <div class="lp-row-text">
+                  <div class="lp-row-title">Bergdorf Zentrum</div>
+                  <div class="lp-row-sub">5 Min Fußweg · Linie 81 + Postauto</div>
+                </div>
+                <div class="lp-row-cta" data-toast="Fahrplan öffnet…">Fahrplan →</div>
+              </div>
+              <div class="lp-row">
+                <div class="lp-row-icon">🚂</div>
+                <div class="lp-row-text">
+                  <div class="lp-row-title">SBB Flims-Laax</div>
+                  <div class="lp-row-sub">Anschluss nach Chur · 18 Min Fahrzeit</div>
+                </div>
+                <div class="lp-row-cta" data-toast="SBB öffnet…">SBB →</div>
+              </div>
+            </div>
+          </div>
+          <div class="lp-section">
+            <div class="lp-section-title">🚖 Taxi &amp; Fahrradverleih <span class="lp-section-title-bar"></span></div>
+            <div class="lp-card">
+              <div class="lp-row" style="padding:0;">
+                <div class="lp-row-icon">📞</div>
+                <div class="lp-row-text">
+                  <div class="lp-row-title">Taxi Cavelti</div>
+                  <div class="lp-row-sub">+41 81 123 45 67 · 24/7</div>
+                </div>
+                <div class="lp-row-cta" data-toast="Anrufen…">Anrufen</div>
+              </div>
+              <div class="lp-row">
+                <div class="lp-row-icon">🚲</div>
+                <div class="lp-row-text">
+                  <div class="lp-row-title">Bike Flims</div>
+                  <div class="lp-row-sub">0.4 km · E-Bike + Mountain · 09:00–18:00</div>
+                </div>
+                <div class="lp-row-cta" data-toast="Karte öffnet…">Karte</div>
+              </div>
+            </div>
+          </div>
+          <div style="height:24px;"></div>
+        </div>
+      </div>
+
+      <!-- ════════ SHEET: Zugang & Codes ════════ -->
+      <div class="sheet h-94" id="sheet-zc">
+        <div class="sheet-handle" data-close></div>
+        <div class="sheet-header">
+          <div class="sheet-title">🔐 Zugang &amp; Codes</div>
+          <div class="sheet-close" data-close>✕</div>
+        </div>
+        <div class="sheet-body">
+          <div class="zc-section">
+            <div class="zc-section-title">📶 WLAN <span class="zc-section-bar"></span></div>
+            <div class="wifi-card">
+              <div class="wifi-row">
+                <div class="wifi-icon">📶</div>
+                <div class="wifi-label-block"><div class="wifi-label">Netzwerk</div><div class="wifi-value">Chalet-Bergblick</div></div>
+                <button class="wifi-copy" data-toast="WLAN-Name kopiert">Kopieren</button>
+              </div>
+              <div class="wifi-row">
+                <div class="wifi-icon">🔑</div>
+                <div class="wifi-label-block"><div class="wifi-label">Passwort</div><div class="wifi-value">Berg2026Gast!</div></div>
+                <button class="wifi-copy" data-toast="Passwort kopiert">Kopieren</button>
+              </div>
+              <div class="wifi-qr-block">
+                <div class="wifi-qr-img"><img src="https://api.qrserver.com/v1/create-qr-code/?data=WIFI:T:WPA;S:Chalet-Bergblick;P:Berg2026Gast!;;&size=200x200&margin=0" alt="WLAN QR-Code"/></div>
+                <div class="wifi-qr-text">
+                  <strong>Direkt verbinden</strong>
+                  <p>QR-Code mit der Kamera-App scannen — Phone verbindet sich automatisch.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="zc-section">
+            <div class="zc-section-title">🔑 Schlüsselbox <span class="zc-section-bar"></span></div>
+            <div class="keybox-card">
+              <div class="keybox-photo" style="background-image:url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&auto=format&fit=crop');">
+                <div class="keybox-photo-tag">📷 Hier finden Sie die Box</div>
+              </div>
+              <div class="keybox-headline">4-stelliger Code</div>
+              <div class="keybox-code-display">
+                <div class="keybox-digit">7</div><div class="keybox-digit">8</div><div class="keybox-digit">4</div><div class="keybox-digit">2</div>
+              </div>
+              <div class="keybox-note">
+                <div class="keybox-note-head">💬 Vom Host</div>
+                <p>Liebe Familie Anicic, die Box hängt rechts neben der Eingangstür auf Brusthöhe. Nach Eingabe des Codes den Bügel nach oben ziehen — der Schlüssel ist innen. Falls etwas hakt, kurz im Chat melden, ich bin gleich erreichbar. Schönen Aufenthalt! — Markus</p>
+              </div>
+            </div>
+          </div>
+          <div class="zc-section">
+            <div class="zc-section-title">⏰ Check-in/out <span class="zc-section-bar"></span></div>
+            <div class="checkin-card">
+              <div class="checkin-photo" style="background-image:url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=600&auto=format&fit=crop');">
+                <div class="checkin-photo-tag">📷 Eingang &amp; Parkplatz</div>
+              </div>
+              <div class="checkin-grid">
+                <div class="checkin-cell"><div class="checkin-cell-label">Anreise</div><div class="checkin-cell-date">Fr 1. Mai</div><div class="checkin-cell-time">ab 15:00</div></div>
+                <div class="checkin-cell"><div class="checkin-cell-label">Abreise</div><div class="checkin-cell-date">Mo 4. Mai</div><div class="checkin-cell-time">bis 11:00</div></div>
+              </div>
+              <div class="checkin-extend-btn" data-open="svc">⏰ Late Check-out anfragen →</div>
+            </div>
+          </div>
+          <div style="height:24px;"></div>
+        </div>
+      </div>
+
+      <!-- ════════ SHEET: Hausordnung ════════ -->
+      <div class="sheet h-94" id="sheet-rules">
+        <div class="sheet-handle" data-close></div>
+        <div class="sheet-header">
+          <div class="sheet-title">📜 Hausordnung</div>
+          <div class="sheet-close" data-close>✕</div>
+        </div>
+        <div class="sheet-body">
+          <div class="rules-intro">Damit alle einen schönen Aufenthalt haben — kurz die wichtigsten Regeln. Tippen Sie auf eine Regel für Details.</div>
+          <div class="rules-meta">
+            <span class="rules-meta-pill">10 Regeln</span><span>·</span><span>Stand: 12. März 2026</span>
+          </div>
+          <div class="rules-list">
+            <div class="rule-item" data-toggle="rule">
+              <div class="rule-head"><div class="rule-icon">🛏️</div><div class="rule-text"><div class="rule-title">Check-in &amp; Check-out</div><div class="rule-sub">Anreise ab 15:00 · Abreise bis 11:00</div></div><div class="rule-chev">›</div></div>
+            </div>
+            <div class="rule-item" data-toggle="rule">
+              <div class="rule-head"><div class="rule-icon">🔑</div><div class="rule-text"><div class="rule-title">Schlüsselübergabe</div><div class="rule-sub">Schlüsselbox · Code in „Zugang &amp; Codes"</div></div><div class="rule-chev">›</div></div>
+            </div>
+            <div class="rule-item" data-toggle="rule">
+              <div class="rule-head"><div class="rule-icon">🚭</div><div class="rule-text"><div class="rule-title">Rauchen</div><div class="rule-sub">Im Innenbereich</div></div><div class="rule-pill deny">Nicht erlaubt</div><div class="rule-chev">›</div></div>
+            </div>
+            <div class="rule-item open" data-toggle="rule">
+              <div class="rule-head"><div class="rule-icon">🐾</div><div class="rule-text"><div class="rule-title">Haustiere</div><div class="rule-sub">Auf Anfrage beim Host</div></div><div class="rule-pill ask">Auf Anfrage</div><div class="rule-chev">›</div></div>
+              <div class="rule-body">
+                <p>Hunde sind nach Absprache willkommen — bitte vorab kurz Bescheid geben (Größe, Anzahl). Eine kleine Reinigungs-Pauschale kann anfallen.</p>
+                <div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><div class="callout-label">Tipp</div><p>Hunde-Decken &amp; Napf liegen im Schrank im Eingang.</p></div></div>
+                <div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body"><div class="callout-label">Wichtig</div><p>Keine Tiere im Schlafzimmer und auf den Sofas — bitte respektieren.</p></div></div>
+              </div>
+            </div>
+            <div class="rule-item" data-toggle="rule">
+              <div class="rule-head"><div class="rule-icon">🌙</div><div class="rule-text"><div class="rule-title">Ruhezeiten</div><div class="rule-sub">22:00 — 07:00 · Mittag 12:00 — 13:30</div></div><div class="rule-chev">›</div></div>
+            </div>
+            <div class="rule-item" data-toggle="rule">
+              <div class="rule-head"><div class="rule-icon">🧹</div><div class="rule-text"><div class="rule-title">Sauberkeit</div><div class="rule-sub">Geschirr in Spülmaschine · Bad besenrein</div></div><div class="rule-chev">›</div></div>
+            </div>
+            <div class="rule-item" data-toggle="rule">
+              <div class="rule-head"><div class="rule-icon">♻️</div><div class="rule-text"><div class="rule-title">Mülltrennung</div><div class="rule-sub">PET, Glas, Restmüll getrennt</div></div><div class="rule-chev">›</div></div>
+            </div>
+            <div class="rule-item" data-toggle="rule">
+              <div class="rule-head"><div class="rule-icon">🛌</div><div class="rule-text"><div class="rule-title">Wäsche vor Abreise</div><div class="rule-sub">Bettlaken in Wäschesack im Bad</div></div><div class="rule-chev">›</div></div>
+            </div>
+            <div class="rule-item" data-toggle="rule">
+              <div class="rule-head"><div class="rule-icon">⚡</div><div class="rule-text"><div class="rule-title">Energie sparen</div><div class="rule-sub">Heizung runter beim Lüften · Licht aus</div></div><div class="rule-chev">›</div></div>
+            </div>
+            <div class="rule-item" data-toggle="rule">
+              <div class="rule-head"><div class="rule-icon">⚠️</div><div class="rule-text"><div class="rule-title">Schaden melden</div><div class="rule-sub">Über „Problem melden" · gerne mit Foto</div></div><div class="rule-chev">›</div></div>
+            </div>
+          </div>
+          <div class="rules-footer">Vielen Dank für Ihr Verständnis — wir wünschen Ihnen einen wunderschönen Aufenthalt! 🌿</div>
+          <div style="height:24px;"></div>
+        </div>
+      </div>
+
+      <!-- ════════ SHEET: Annehmlichkeiten ════════ -->
+      <div class="sheet h-94" id="sheet-amen">
+        <div class="sheet-handle" data-close></div>
+        <div class="sheet-header">
+          <div class="sheet-title">🛁 Annehmlichkeiten</div>
+          <div class="sheet-close" data-close>✕</div>
+        </div>
+        <div class="sheet-body">
+          <div class="gen-section-header">🧖 Wellness &amp; Erholung <span class="gen-section-count">3</span></div>
+          <div class="gen-list">
+            <div class="gen-card expandable open" data-toggle="amen">
+              <div class="gen-card-head">
+                <div class="gen-card-icon photo" style="background-image:url('https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=200&auto=format&fit=crop');"></div>
+                <div class="gen-card-body"><div class="gen-card-title">Sauna</div><div class="gen-card-sub">UG · 30 Min Voranmeldung beim Host</div></div>
+                <div class="gen-card-side"><span class="gen-card-pill pill-time">Auf Anfrage</span></div>
+                <div class="gen-card-chev">›</div>
+              </div>
+              <div class="gen-card-detail">
+                <p style="margin:10px 0 8px; font-size:12.5px; line-height:1.5;">Finnische Sauna im Untergeschoss, max. 4 Personen. Voranmeldung beim Host damit Strom &amp; Aufguss vorbereitet sind.</p>
+                <ol class="device-step-list">
+                  <li class="device-step">Beim Host melden — wir schalten die Sauna ein (~30 Min Vorheizen).</li>
+                  <li class="device-step">Türcode: <strong>4422</strong> · Schuhe ausziehen vor dem Vorraum.</li>
+                  <li class="device-step">Aufguss-Wasser steht bereit · maximal 2 Kellen pro Aufguss.</li>
+                  <li class="device-step">Nach Nutzung Tür auflassen, damit Holz trocknet.</li>
+                </ol>
+                <div class="device-photo-row">
+                  <div class="device-photo" style="background-image:url('https://images.unsplash.com/photo-1591343395082-e120087004b4?w=300&auto=format&fit=crop');"></div>
+                  <div class="device-photo" style="background-image:url('https://images.unsplash.com/photo-1545071677-fadbecff64aa?w=300&auto=format&fit=crop');"></div>
+                </div>
+                <div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body"><div class="callout-label">Wichtig</div><p>Nutzung auf eigene Verantwortung. Kinder unter 12 nur in Begleitung Erwachsener.</p></div></div>
+                <div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><div class="callout-label">Tipp</div><p>Saunatücher liegen im Schrank im Vorraum.</p></div></div>
+              </div>
+            </div>
+            <div class="gen-card"><div class="gen-card-icon photo" style="background-image:url('https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=200&auto=format&fit=crop');"></div><div class="gen-card-body"><div class="gen-card-title">Hallenbad</div><div class="gen-card-sub">EG · 07:00–22:00</div></div><div class="gen-card-side"><span class="gen-card-pill pill-code">Code 1234</span></div></div>
+            <div class="gen-card"><div class="gen-card-icon photo" style="background-image:url('https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&auto=format&fit=crop');"></div><div class="gen-card-body"><div class="gen-card-title">Fitness-Raum</div><div class="gen-card-sub">UG · 06:00–23:00</div></div><div class="gen-card-side"><span class="gen-card-pill pill-code">Code 5678</span></div></div>
+          </div>
+          <div class="gen-section-header">🌳 Aussen &amp; Grundstück <span class="gen-section-count">3</span></div>
+          <div class="gen-list">
+            <div class="gen-card"><div class="gen-card-icon photo" style="background-image:url('https://images.unsplash.com/photo-1544025162-d76694265947?w=200&auto=format&fit=crop');"></div><div class="gen-card-body"><div class="gen-card-title">Grillplatz</div><div class="gen-card-sub">Garten Süd · Reservation beim Host</div></div><div class="gen-card-side"><span class="gen-card-pill pill-time">Auf Anfrage</span></div></div>
+            <div class="gen-card"><div class="gen-card-icon photo" style="background-image:url('https://images.unsplash.com/photo-1517021897933-0e0319cfbc28?w=200&auto=format&fit=crop');"></div><div class="gen-card-body"><div class="gen-card-title">Kinderspielplatz</div><div class="gen-card-sub">Garten · 2–10 Jahre</div></div><div class="gen-card-side"><span class="gen-card-pill pill-open">Frei</span></div></div>
+            <div class="gen-card"><div class="gen-card-icon photo" style="background-image:url('https://images.unsplash.com/photo-1485965127634-5d6e0f54df87?w=200&auto=format&fit=crop');"></div><div class="gen-card-body"><div class="gen-card-title">Terrasse / Balkon</div><div class="gen-card-sub">Möbel + Sonnenschirm · Ruhe ab 22:00</div></div></div>
+          </div>
+          <div class="gen-section-header">🧰 Praktisch <span class="gen-section-count">3</span></div>
+          <div class="gen-list">
+            <div class="gen-card"><div class="gen-card-icon">🧺</div><div class="gen-card-body"><div class="gen-card-title">Waschraum</div><div class="gen-card-sub">UG · 07:00–22:00 · CHF 5/Wäsche</div></div><div class="gen-card-side"><span class="gen-card-pill pill-time">CHF 5</span></div></div>
+            <div class="gen-card"><div class="gen-card-icon">🎿</div><div class="gen-card-body"><div class="gen-card-title">Skiraum / Fahrradraum</div><div class="gen-card-sub">UG hinten · trockene Stellplätze</div></div><div class="gen-card-side"><span class="gen-card-pill pill-code">Code 9876</span></div></div>
+            <div class="gen-card"><div class="gen-card-icon">🗑️</div><div class="gen-card-body"><div class="gen-card-title">Müllentsorgung</div><div class="gen-card-sub">Container UG · Säcke unter Spüle · Mi Abholung</div></div></div>
+          </div>
+          <div style="height:24px;"></div>
+        </div>
+      </div>
+
+      <!-- ════════ SHEET: Inventar ════════ -->
+      <div class="sheet h-94" id="sheet-inv">
+        <div class="sheet-handle" data-close></div>
+        <div class="sheet-header">
+          <div class="sheet-title">📦 Geräte &amp; Inventar</div>
+          <div class="sheet-close" data-close>✕</div>
+        </div>
+        <div class="sheet-body">
+          <div class="gen-section-header">🛠️ Geräte mit Anleitung <span class="gen-section-count">5</span></div>
+          <div class="device-accordion">
+            <div class="device-item open" data-toggle="device">
+              <div class="device-head">
+                <div class="device-thumb" style="background-image:url('https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=200&auto=format&fit=crop');"></div>
+                <div class="device-body"><div class="device-title">Kaffeemaschine</div><div class="device-meta">Nespresso · Kapseln im Schrank links</div></div>
+                <div class="device-chev">›</div>
+              </div>
+              <div class="device-detail">
+                <ol class="device-step-list">
+                  <li class="device-step">Wassertank rechts abnehmen, mit kaltem Wasser füllen, wieder einsetzen.</li>
+                  <li class="device-step">Maschine einschalten — Knopf oben (rotes Licht blinkt während Aufheizen).</li>
+                  <li class="device-step">Kapsel oben einlegen, Hebel zudrücken bis er einrastet.</li>
+                  <li class="device-step">Tasse drunter, Espresso- oder Lungo-Knopf drücken. Fertig.</li>
+                </ol>
+                <div class="device-photo-row">
+                  <div class="device-photo" style="background-image:url('https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=300&auto=format&fit=crop');"></div>
+                  <div class="device-photo" style="background-image:url('https://images.unsplash.com/photo-1610632380989-680fe40816c6?w=300&auto=format&fit=crop');"></div>
+                  <div class="device-photo" style="background-image:url('https://images.unsplash.com/photo-1485808191679-5f86510681a2?w=300&auto=format&fit=crop');"></div>
+                </div>
+                <div class="callout tip"><div class="callout-icon">💡</div><div class="callout-body"><div class="callout-label">Tipp</div><p>Leere Kapseln in den extra Beutel im Schrank links — wir bringen sie zur Sammelstelle.</p></div></div>
+                <div class="callout info"><div class="callout-icon">ℹ️</div><div class="callout-body"><div class="callout-label">Info</div><p>Falls die Maschine entkalkt werden muss, blinkt das Licht orange — kurz im Chat melden.</p></div></div>
+              </div>
+            </div>
+            <div class="device-item" data-toggle="device">
+              <div class="device-head"><div class="device-thumb" style="background-image:url('https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=200&auto=format&fit=crop');"></div><div class="device-body"><div class="device-title">Smart TV</div><div class="device-meta">Samsung · Netflix + YouTube via Fernbedienung</div></div><div class="device-chev">›</div></div>
+              <div class="device-detail"><p>Fernbedienung auf dem Sideboard. Einschalten via Power-Knopf, Eingangsquelle "HDMI 1" für Apple-TV, "TV" für klassische Programme.</p></div>
+            </div>
+            <div class="device-item" data-toggle="device">
+              <div class="device-head"><div class="device-thumb" style="background-image:url('https://images.unsplash.com/photo-1545158539-1709f10b1c2c?w=200&auto=format&fit=crop');"></div><div class="device-body"><div class="device-title">Heizung &amp; Raumklima</div><div class="device-meta">Thermostat im Wohnzimmer · 21–22 °C empfohlen</div></div><div class="device-chev">›</div></div>
+              <div class="device-detail"><p>Drehrad am Thermostat: 1 = ca. 12 °C, 5 = ca. 28 °C. Beim Lüften kurz auf 1 stellen.</p></div>
+            </div>
+            <div class="device-item" data-toggle="device">
+              <div class="device-head"><div class="device-thumb" style="background-image:url('https://images.unsplash.com/photo-1581622558663-b2e33377dfb2?w=200&auto=format&fit=crop');"></div><div class="device-body"><div class="device-title">Geschirrspüler</div><div class="device-meta">Tabs unter der Spüle · Programme &amp; Bedienung</div></div><div class="device-chev">›</div></div>
+              <div class="device-detail"><p>Tab in das kleine Fach in der Tür legen, Tür schließen, Programm „Eco" für normale Beladung. Dauert ~2 h.</p></div>
+            </div>
+            <div class="device-item" data-toggle="device">
+              <div class="device-head"><div class="device-thumb">🔥</div><div class="device-body"><div class="device-title">Kachelofen</div><div class="device-meta">Holz im Korb daneben · Anleitung wichtig</div></div><div class="device-chev">›</div></div>
+              <div class="device-detail"><p>Bitte nur trockenes Buchenholz verwenden, niemals Papier/Karton. Anzünder + Streichhölzer im Korb. Bei Fragen kurz im Chat melden.</p></div>
+            </div>
+          </div>
+          <div class="gen-section-header" style="margin-top:24px;">📋 Inventar-Listen <span class="gen-section-count">4</span></div>
+          <div class="inv-list-card">
+            <div class="inv-list-head"><div class="inv-list-icon">🍳</div><div class="inv-list-title">Küchenausstattung</div><span class="inv-list-count">für 6 Personen</span></div>
+            <div class="inv-list-body"><ul><li>Geschirr · Besteck · Gläser für 6 Personen</li><li>Töpfe, Pfannen, Backofenformen</li><li>Kaffeemaschine, Wasserkocher, Toaster</li><li>Grundausstattung: Salz, Pfeffer, Öl, Essig</li></ul></div>
+          </div>
+          <div class="inv-list-card">
+            <div class="inv-list-head"><div class="inv-list-icon">🛏️</div><div class="inv-list-title">Schlafzimmer</div><span class="inv-list-count">3 Räume</span></div>
+            <div class="inv-list-body"><ul><li>2 Doppelbetten · 1 Einzelbett · 1 Reisebett auf Anfrage</li><li>Frische Bettwäsche bei Anreise</li><li>Föhn in jedem Bad</li></ul></div>
+          </div>
+          <div class="inv-list-card">
+            <div class="inv-list-head"><div class="inv-list-icon">🛁</div><div class="inv-list-title">Badezimmer</div><span class="inv-list-count">2 Bäder</span></div>
+            <div class="inv-list-body"><ul><li>Hand- &amp; Duschtücher für 6 Personen</li><li>Erste-Hilfe-Set im Schrank</li><li>Shampoo + Duschgel als Anbruch</li></ul></div>
+          </div>
+          <div class="inv-list-card">
+            <div class="inv-list-head"><div class="inv-list-icon">🛋️</div><div class="inv-list-title">Wohnbereich</div></div>
+            <div class="inv-list-body"><ul><li>TV · Bluetooth-Lautsprecher · WLAN-Router</li><li>Brettspiele &amp; Bücher in der Truhe</li><li>Decken &amp; Kissen für gemütliche Abende</li></ul></div>
+          </div>
+          <div style="height:24px;"></div>
+        </div>
+      </div>
+
+      <!-- ════════ SHEET: Versorgung ════════ -->
+      <div class="sheet h-94" id="sheet-care">
+        <div class="sheet-handle" data-close></div>
+        <div class="sheet-header">
+          <div class="sheet-title">🏥 Versorgung in der Nähe</div>
+          <div class="sheet-close" data-close>✕</div>
+        </div>
+        <div class="sheet-body">
+          <div style="margin:14px 16px 0;"><div class="callout warn"><div class="callout-icon">⚠️</div><div class="callout-body"><div class="callout-label">Notfall</div><p>Im Notfall <strong>144</strong> (Sanität) oder <strong>112</strong> (allg. Notruf) anrufen — 24/7, mehrsprachig.</p></div></div></div>
+          <div class="gen-section-header">⛑️ Gesundheit <span class="gen-section-count">3</span></div>
+          <div class="gen-list">
+            <div class="gen-card"><div class="gen-card-icon">💊</div><div class="gen-card-body"><div class="gen-card-title">Apotheke Cavelti</div><div class="gen-card-sub">📍 0.6 km · 🕐 08:00–18:30</div></div><div class="gen-card-side"><span class="gen-card-pill pill-open">Offen</span><span class="gen-card-cta" data-toast="Anrufen…">Anrufen</span></div></div>
+            <div class="gen-card"><div class="gen-card-icon">🩺</div><div class="gen-card-body"><div class="gen-card-title">Hausarzt Dr. Anderegg</div><div class="gen-card-sub">📍 1.1 km · Notfall: 144</div></div><div class="gen-card-side"><span class="gen-card-pill pill-time">Mo–Fr 08:00–17:00</span></div></div>
+            <div class="gen-card"><div class="gen-card-icon">🏥</div><div class="gen-card-body"><div class="gen-card-title">Spital Ilanz</div><div class="gen-card-sub">📍 15 km · Notfall: 144</div></div><div class="gen-card-side"><span class="gen-card-pill pill-247">24/7</span></div></div>
+          </div>
+          <div class="gen-section-header">🛒 Einkaufen <span class="gen-section-count">3</span></div>
+          <div class="gen-list">
+            <div class="gen-card"><div class="gen-card-icon">🥖</div><div class="gen-card-body"><div class="gen-card-title">Bäckerei Cavelti</div><div class="gen-card-sub">📍 0.4 km · 🕐 06:30–18:00</div></div><div class="gen-card-side"><span class="gen-card-pill pill-open">Offen</span></div></div>
+            <div class="gen-card"><div class="gen-card-icon">🛒</div><div class="gen-card-body"><div class="gen-card-title">Volg Bergdorf</div><div class="gen-card-sub">📍 0.7 km · 🕐 07:00–19:00</div></div><div class="gen-card-side"><span class="gen-card-pill pill-open">Offen</span></div></div>
+            <div class="gen-card"><div class="gen-card-icon">🍷</div><div class="gen-card-body"><div class="gen-card-title">Coop Flims</div><div class="gen-card-sub">📍 1.8 km · 🕐 08:00–20:00</div></div><div class="gen-card-side"><span class="gen-card-pill pill-open">Offen</span></div></div>
+          </div>
+          <div class="gen-section-header">⚙️ Sonstiges <span class="gen-section-count">2</span></div>
+          <div class="gen-list">
+            <div class="gen-card"><div class="gen-card-icon">⛽</div><div class="gen-card-body"><div class="gen-card-title">Migrol Tankstelle</div><div class="gen-card-sub">📍 1.3 km · 🕐 06:00–22:00</div></div><div class="gen-card-side"><span class="gen-card-pill pill-open">Offen</span></div></div>
+            <div class="gen-card"><div class="gen-card-icon">🏧</div><div class="gen-card-body"><div class="gen-card-title">Bankomat Raiffeisen</div><div class="gen-card-sub">📍 0.5 km · 24/7 zugänglich</div></div><div class="gen-card-side"><span class="gen-card-pill pill-247">24/7</span></div></div>
+          </div>
+          <div style="height:24px;"></div>
+        </div>
+      </div>
+
+      <!-- ════════ SHEET: Services-Liste ════════ -->
+      <div class="sheet h-94" id="sheet-svc">
+        <div class="sheet-handle" data-close></div>
+        <div class="sheet-header">
+          <div class="sheet-title">✨ Services &amp; Extras</div>
+          <div class="sheet-close" data-close>✕</div>
+        </div>
+        <div class="cat-chips">
+          <div class="cat-chip active">Alle 5</div>
+          <div class="cat-chip">Kulinarik</div>
+          <div class="cat-chip">Komfort</div>
+          <div class="cat-chip">Haushalt</div>
+        </div>
+        <div class="sheet-body">
+          <div class="svc-list">
+            <div class="svc-card" data-open="svc-detail">
+              <div class="svc-card-img" style="background-image:url('https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=400&auto=format&fit=crop');"><div class="svc-card-tag">Beliebt</div></div>
+              <div class="svc-card-body"><div class="svc-card-title">Frühstücksservice</div><div class="svc-card-desc">Frische Croissants, Brot, Gipfeli — vor die Tür</div><div class="svc-card-row"><div class="svc-card-price">CHF 25/Tag</div><div class="svc-card-cta">Anfragen →</div></div></div>
+            </div>
+            <div class="svc-card" data-open="svc-detail">
+              <div class="svc-card-img" style="background-image:url('https://images.unsplash.com/photo-1542528180-a1208c5169a5?w=400&auto=format&fit=crop');"></div>
+              <div class="svc-card-body"><div class="svc-card-title">Late Check-out 14:00</div><div class="svc-card-desc">3 zusätzliche Stunden in Ihrer Wohnung</div><div class="svc-card-row"><div class="svc-card-price">CHF 50</div><div class="svc-card-cta">Anfragen →</div></div></div>
+            </div>
+            <div class="svc-card" data-open="svc-detail">
+              <div class="svc-card-img" style="background-image:url('https://images.unsplash.com/photo-1541516160071-4bb0c5af65ba?w=400&auto=format&fit=crop');"><div class="svc-card-tag">Beliebt</div></div>
+              <div class="svc-card-body"><div class="svc-card-title">Fondue-Set komplett</div><div class="svc-card-desc">Käse-Fondue, Caquelon, Brot, Beilagen</div><div class="svc-card-row"><div class="svc-card-price">CHF 65</div><div class="svc-card-cta">Anfragen →</div></div></div>
+            </div>
+            <div class="svc-card" data-open="svc-detail">
+              <div class="svc-card-img" style="background-image:url('https://images.unsplash.com/photo-1517677208171-0bc6725a3e60?w=400&auto=format&fit=crop');"></div>
+              <div class="svc-card-body"><div class="svc-card-title">Mid-Stay Reinigung</div><div class="svc-card-desc">Frische Handtücher, Wischen, Müll raus</div><div class="svc-card-row"><div class="svc-card-price">CHF 85</div><div class="svc-card-cta">Anfragen →</div></div></div>
+            </div>
+            <div class="svc-card" data-open="svc-detail">
+              <div class="svc-card-img" style="background-image:url('https://images.unsplash.com/photo-1545173168-9f1947eebb7f?w=400&auto=format&fit=crop');"></div>
+              <div class="svc-card-body"><div class="svc-card-title">Wäscheservice</div><div class="svc-card-desc">Waschen, Trocknen, Falten</div><div class="svc-card-row"><div class="svc-card-price">CHF 30</div><div class="svc-card-cta">Anfragen →</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ SHEET: Service-Detail + Anfrage ════════ -->
+      <div class="sheet h-96" id="sheet-svc-detail">
+        <div class="sheet-handle" data-close></div>
+        <div class="sheet-body" style="padding:0;">
+          <div class="svc-detail-hero" style="background-image:url('https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=700&auto=format&fit=crop');">
+            <div class="svc-detail-back" data-close>‹</div>
+            <div class="svc-detail-tag">Beliebt</div>
+          </div>
+          <div class="svc-detail-info">
+            <div class="svc-detail-title">Frühstücksservice</div>
+            <div class="svc-detail-meta"><div class="svc-detail-price-big">CHF 25/Tag</div><div class="svc-detail-meta-text">· vor 19:00 für nächsten Tag bestellen</div></div>
+            <div class="svc-detail-desc">Frisches Frühstück direkt vor Ihre Tür: 2 Croissants, Brot, Gipfeli, Konfitüre, Butter, Kaffeekapseln. Auf Wunsch auch glutenfrei oder vegan.</div>
+          </div>
+          <div class="anfrage-form">
+            <div class="anfrage-form-title">📝 Anfrage senden</div>
+            <div class="form-row">
+              <div class="form-label">Wunschtermin <span class="opt">optional</span></div>
+              <div class="form-row-double"><input class="form-input" type="text" placeholder="Morgen, 03.05." /><input class="form-input" type="text" placeholder="08:30" /></div>
+            </div>
+            <div class="form-row">
+              <div class="form-label">Bemerkungen <span class="opt">optional</span></div>
+              <textarea class="form-textarea" placeholder="Z.B. „2× glutenfrei, 1× vegan, gerne mit Fruchtsaft"></textarea>
+            </div>
+          </div>
+          <button class="form-primary-btn" data-toast="Anfrage gesendet — siehe Nachrichten">Anfrage senden →</button>
+          <div class="form-hint">Bestätigung in <strong>Nachrichten</strong>. Bezahlung off-system mit Host (Twint, Bar oder PayPal).</div>
+          <div style="height:24px;"></div>
+        </div>
+      </div>
+
+      <!-- ════════ SHEET: POI-Liste ════════ -->
+      <div class="sheet h-94" id="sheet-poi">
+        <div class="sheet-handle" data-close></div>
+        <div class="sheet-header">
+          <div class="sheet-title">🌄 Ort &amp; Umgebung</div>
+          <div class="sheet-close" data-close>✕</div>
+        </div>
+        <div class="sheet-body">
+          <div class="poi-section-header">🍽️ Restaurants &amp; Kulinarik · 3</div>
+          <div class="poi-list">
+            <div class="poi-card" data-open="poi-detail"><div class="poi-card-img" style="background-image:url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&auto=format&fit=crop');"><div class="poi-card-discount">−10%</div></div><div class="poi-card-body"><div class="poi-card-title">Bergrestaurant Alpenblick</div><div class="poi-card-tags"><span class="poi-card-tag">Bündner Küche</span><span class="poi-card-tag">Aussicht</span></div><div class="poi-card-distance">📍 1.2 km · 🕐 11:00–22:00</div></div></div>
+            <div class="poi-card" data-open="poi-detail"><div class="poi-card-img" style="background-image:url('https://images.unsplash.com/photo-1559329007-40df8a9345d8?w=400&auto=format&fit=crop');"></div><div class="poi-card-body"><div class="poi-card-title">Bäckerei Cavelti</div><div class="poi-card-tags"><span class="poi-card-tag">Frühstück</span><span class="poi-card-tag">Lokal</span></div><div class="poi-card-distance">📍 0.4 km · 🕐 06:30–18:00</div></div></div>
+          </div>
+          <div class="poi-section-header">🎟️ Erlebnisse &amp; Aktivitäten · 2</div>
+          <div class="poi-list">
+            <div class="poi-card" data-open="poi-detail"><div class="poi-card-img" style="background-image:url('https://images.unsplash.com/photo-1489599529472-d51b3d92f5ad?w=400&auto=format&fit=crop');"><div class="poi-card-discount">−20%</div></div><div class="poi-card-body"><div class="poi-card-title">Kino Flims</div><div class="poi-card-tags"><span class="poi-card-tag">Familie</span></div><div class="poi-card-distance">📍 0.8 km</div></div></div>
+          </div>
+          <div class="poi-section-header">💆 Wellness &amp; Spa · 1</div>
+          <div class="poi-list">
+            <div class="poi-card" data-open="poi-detail"><div class="poi-card-img" style="background-image:url('https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400&auto=format&fit=crop');"><div class="poi-card-discount">−10%</div></div><div class="poi-card-body"><div class="poi-card-title">Caumasee Spa</div><div class="poi-card-tags"><span class="poi-card-tag">Sauna</span><span class="poi-card-tag">Massage</span></div><div class="poi-card-distance">📍 2.5 km · 🕐 09:00–20:00</div></div></div>
+          </div>
+          <div style="height:24px;"></div>
+        </div>
+      </div>
+
+      <!-- ════════ SHEET: POI-Detail ════════ -->
+      <div class="sheet h-96" id="sheet-poi-detail">
+        <div class="sheet-handle" data-close></div>
+        <div class="sheet-body" style="padding:0;">
+          <div class="poi-detail-hero" style="background-image:url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=700&auto=format&fit=crop');">
+            <div class="svc-detail-back" data-close>‹</div>
+          </div>
+          <div class="poi-detail-info">
+            <div class="svc-detail-title">Bergrestaurant Alpenblick</div>
+            <div class="poi-detail-tags"><span class="poi-card-tag">Bündner Küche</span><span class="poi-card-tag">Aussicht</span><span class="poi-card-tag">Vegetarisch</span></div>
+            <div class="poi-detail-distance-row"><span>📍 1.2 km · ⛰️ Bergstation</span><span>·</span><span>🕐 11:00–22:00</span></div>
+            <div class="poi-detail-desc">Persönliche Empfehlung: das Capuns-Gericht ist legendär. Reservation für Wochenende empfohlen — von der Sonnenterrasse sieht man bis zum Caumasee.</div>
+          </div>
+          <div class="poi-cta-section-title">Aktionen</div>
+          <div class="poi-cta-grid">
+            <div class="poi-cta-tile" data-toast="Karten-App öffnet…"><div class="poi-cta-icon">🗺️</div><div class="poi-cta-title-text">Auf Karte sehen</div><div class="poi-cta-sub">Route in Google Maps öffnen</div></div>
+            <div class="poi-cta-tile primary" data-toast="Gutschein-Code kopiert"><div class="poi-cta-icon">🎟️</div><div class="poi-cta-title-text">Gutschein einlösen</div><div class="poi-cta-sub">−10% auf den ganzen Tisch</div><div class="poi-cta-code">GAST-ALPEN10</div></div>
+            <div class="poi-cta-tile" data-toast="Externer Link öffnet…"><div class="poi-cta-icon">🔗</div><div class="poi-cta-title-text">Tisch reservieren</div><div class="poi-cta-sub">Externe Buchung →</div></div>
+            <div class="poi-cta-tile" data-toast="Anrufen…"><div class="poi-cta-icon">📞</div><div class="poi-cta-title-text">Direkt anrufen</div><div class="poi-cta-sub">+41 81 XXX XX XX</div></div>
+          </div>
+          <div style="height:24px;"></div>
+        </div>
+      </div>
+
+      <!-- ════════ SHEET: Problem melden ════════ -->
+      <div class="sheet h-94" id="sheet-problem">
+        <div class="sheet-handle" data-close></div>
+        <div class="sheet-header">
+          <div class="sheet-title">📷 Problem melden</div>
+          <div class="sheet-close" data-close>✕</div>
+        </div>
+        <div class="sheet-body">
+          <div class="pm-toggle">
+            <div class="pm-toggle-btn active">💡 Selbsthilfe</div>
+            <div class="pm-toggle-btn">📷 An Host senden</div>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted); margin:12px 16px 4px; line-height:1.45;">Vielleicht löst sich Ihr Problem in 30 Sekunden — schauen Sie kurz die häufigsten Themen an.</div>
+          <div class="pm-help-grid">
+            <div class="pm-help-card"><div class="pm-help-icon">📶</div><div class="pm-help-title">WLAN funktioniert nicht</div><div class="pm-help-sub">Router neustarten, QR-Code erneut scannen</div></div>
+            <div class="pm-help-card"><div class="pm-help-icon">🌡️</div><div class="pm-help-title">Heizung kalt</div><div class="pm-help-sub">Thermostat-Einstellungen prüfen</div></div>
+            <div class="pm-help-card"><div class="pm-help-icon">🚿</div><div class="pm-help-title">Kein Warmwasser</div><div class="pm-help-sub">Boiler-Schalter im Heizraum</div></div>
+            <div class="pm-help-card"><div class="pm-help-icon">📺</div><div class="pm-help-title">TV ohne Bild</div><div class="pm-help-sub">Eingangsquelle / HDMI / Strom</div></div>
+            <div class="pm-help-card"><div class="pm-help-icon">🔑</div><div class="pm-help-title">Schlüsselbox geht nicht</div><div class="pm-help-sub">Code prüfen, Box rütteln, anrufen</div></div>
+            <div class="pm-help-card"><div class="pm-help-icon">⚡</div><div class="pm-help-title">Strom / Sicherung</div><div class="pm-help-sub">Sicherungskasten Eingangsdiele</div></div>
+          </div>
+          <div class="pm-fallback">
+            <div class="pm-fallback-arrow">↘️</div>
+            <div><strong>Problem nicht dabei?</strong> Tippen Sie oben auf „An Host senden" — wir schicken Foto + Beschreibung an den Gastgeber.</div>
+          </div>
+          <div class="pm-form">
+            <div style="font-size:11px; font-weight:700; color:var(--text-muted); letter-spacing:0.06em; text-transform:uppercase; margin:14px 0 8px;">Vorschau: An Host senden</div>
+            <div class="form-row">
+              <div class="form-label">Kategorie</div>
+              <select class="form-input"><option>Heizung &amp; Warmwasser</option><option>Internet &amp; TV</option><option>Schlüssel &amp; Zugang</option><option>Sauberkeit</option><option>Schaden</option><option>Sonstiges</option></select>
+            </div>
+            <div class="form-row">
+              <div class="form-label">Foto <span class="opt">empfohlen, optional</span></div>
+              <div class="pm-photo-uploader">
+                <div class="pm-photo-slot filled" style="background-image:url('https://images.unsplash.com/photo-1545158539-1709f10b1c2c?w=200&auto=format&fit=crop');"></div>
+                <div class="pm-photo-slot">+</div>
+                <div class="pm-photo-slot">+</div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-label">Beschreibung</div>
+              <textarea class="form-textarea" placeholder="Was funktioniert nicht? Wann ist es passiert?"></textarea>
+            </div>
+          </div>
+          <button class="form-primary-btn" data-toast="Ticket gesendet — siehe Nachrichten">An Host senden →</button>
+          <div class="form-hint">Sie sehen das Ticket sofort in <strong>Nachrichten</strong> mit Status „Wartet".</div>
+          <div style="height:24px;"></div>
+        </div>
+      </div>
+
+      <!-- ════════ SHEET: Feedback ════════ -->
+      <div class="sheet h-94" id="sheet-feedback">
+        <div class="sheet-handle" data-close></div>
+        <div class="sheet-header">
+          <div class="sheet-title">⭐ Feedback &amp; Bewertung</div>
+          <div class="sheet-close" data-close>✕</div>
+        </div>
+        <div class="sheet-body">
+          <div class="fb-section">
+            <div class="fb-section-title">🤝 Privat an den Host <span class="fb-section-bar"></span></div>
+            <div class="fb-private-card">
+              <div style="font-size:13.5px; font-weight:600; text-align:center;">Wie war Ihr Aufenthalt?</div>
+              <div class="fb-stars" id="stars">
+                <span class="fb-star" data-star="1">★</span>
+                <span class="fb-star" data-star="2">★</span>
+                <span class="fb-star" data-star="3">★</span>
+                <span class="fb-star" data-star="4">★</span>
+                <span class="fb-star empty" data-star="5">★</span>
+              </div>
+              <div class="fb-stars-label" id="stars-label">4 von 5 Sternen — Sehr gut</div>
+              <div class="form-row" style="margin-top:14px;">
+                <textarea class="form-textarea" placeholder="Was hat Ihnen gefallen? Was könnten wir besser machen?" style="min-height:80px;"></textarea>
+              </div>
+              <button class="form-primary-btn" style="margin:14px 0 0; width:100%;" data-toast="Privates Feedback gesendet">Privates Feedback senden</button>
+              <div style="font-size:11px; color:var(--text-muted); text-align:center; margin-top:8px; line-height:1.4;">🔒 Geht direkt an Lukas &amp; Andrea — nicht öffentlich sichtbar.</div>
+            </div>
+          </div>
+          <div class="fb-section">
+            <div class="fb-section-title">🌍 Öffentliche Bewertung <span class="fb-section-bar"></span></div>
+            <div style="font-size:12px; color:var(--text-muted); line-height:1.45; margin-bottom:10px;">Wenn Ihnen Ihr Aufenthalt gefallen hat — eine Bewertung auf der Plattform, über die Sie gebucht haben, hilft anderen Reisenden enorm.</div>
+            <div class="fb-public-grid">
+              <div class="fb-platform-card" data-toast="Airbnb-Review öffnet…"><div class="fb-platform-icon airbnb">A</div><div><div class="fb-platform-name">Airbnb</div><div class="fb-platform-sub">Bewertung schreiben</div></div></div>
+              <div class="fb-platform-card" data-toast="Booking-Review öffnet…"><div class="fb-platform-icon booking">B</div><div><div class="fb-platform-name">Booking.com</div><div class="fb-platform-sub">Review hinzufügen</div></div></div>
+              <div class="fb-platform-card" data-toast="Google-Review öffnet…"><div class="fb-platform-icon google">G</div><div><div class="fb-platform-name">Google</div><div class="fb-platform-sub">Sterne &amp; Foto</div></div></div>
+              <div class="fb-platform-card" data-toast="e-domizil-Review öffnet…"><div class="fb-platform-icon edomizil">e</div><div><div class="fb-platform-name">e-domizil</div><div class="fb-platform-sub">CH-Plattform</div></div></div>
+            </div>
+          </div>
+          <div style="height:24px;"></div>
+        </div>
+      </div>
+
+      <!-- ════════ SHEET: SOS ════════ -->
+      <div class="sheet h-96" id="sheet-sos">
+        <div class="sheet-handle" data-close></div>
+        <div class="sheet-header">
+          <div class="sheet-title">🚨 SOS · Notfall</div>
+          <div class="sheet-close" data-close>✕</div>
+        </div>
+        <div class="sheet-body">
+          <div class="sos-intro">
+            <div class="sos-intro-headline">Bewahren Sie Ruhe.<br/>Alle Dienste sind 24/7 erreichbar.</div>
+            <div class="sos-intro-address-block">
+              <div class="sos-intro-address-label">Diese Adresse beim Notruf angeben</div>
+              <div class="sos-intro-address">Bergstrasse 42<br/>7500 St. Moritz</div>
+              <button class="sos-intro-copy" data-toast="Adresse kopiert">📋 Adresse kopieren</button>
+            </div>
+          </div>
+          <div class="sos-section-title">📞 Notruf wählen</div>
+          <div class="sos-grid">
+            <a class="sos-btn red" data-toast="Wähle 144…"><div class="sos-btn-icon">🚑</div><div class="sos-btn-number">144</div><div class="sos-btn-label">Sanität / Ambulanz<br/>Med. Notfälle</div></a>
+            <a class="sos-btn red" data-toast="Wähle 117…"><div class="sos-btn-icon">🚓</div><div class="sos-btn-number">117</div><div class="sos-btn-label">Polizei<br/>Kriminalität · Unfall</div></a>
+            <a class="sos-btn red" data-toast="Wähle 118…"><div class="sos-btn-icon">🚒</div><div class="sos-btn-number">118</div><div class="sos-btn-label">Feuerwehr<br/>Brand · Gas · Explosion</div></a>
+            <a class="sos-btn blue" data-toast="Wähle 1414 (Rega)…"><div class="sos-btn-icon">🚁</div><div class="sos-btn-number">1414</div><div class="sos-btn-label">Rega<br/>Luftrettung Berge</div></a>
+          </div>
+          <div class="sos-section-title">💡 Beim Notruf</div>
+          <div class="sos-behavior">
+            <ol>
+              <li>Ruhe bewahren — atmen Sie tief durch.</li>
+              <li>Adresse angeben (Bergstrasse 42, 7500 St. Moritz).</li>
+              <li>Situation kurz beschreiben — Was ist passiert? Wer ist betroffen?</li>
+              <li>Anweisungen der Zentrale folgen.</li>
+              <li>Erst auflegen, wenn die Zentrale es sagt.</li>
+            </ol>
+          </div>
+          <div class="sos-section-title">🤝 Direkter Kontakt</div>
+          <div class="sos-contacts">
+            <div class="sos-contact-card"><div class="sos-contact-icon host">L</div><div class="sos-contact-body"><div class="sos-contact-name">Lukas Cavelti · Gastgeber</div><div class="sos-contact-meta">+41 81 XXX XX XX · Tagsüber erreichbar</div></div><div class="sos-contact-actions"><div class="sos-contact-btn" data-toast="Anrufen…">📞</div><div class="sos-contact-btn" data-toast="WhatsApp öffnet…">💬</div></div></div>
+            <div class="sos-contact-card"><div class="sos-contact-icon">🩺</div><div class="sos-contact-body"><div class="sos-contact-name">Hausarzt Dr. Anderegg</div><div class="sos-contact-meta">+41 81 XXX XX XX · Mo–Fr 08:00–17:00</div></div><div class="sos-contact-actions"><div class="sos-contact-btn" data-toast="Anrufen…">📞</div></div></div>
+            <div class="sos-contact-card"><div class="sos-contact-icon">🏥</div><div class="sos-contact-body"><div class="sos-contact-name">Spital Ilanz</div><div class="sos-contact-meta">15 km · 24/7 Notaufnahme</div></div><div class="sos-contact-actions"><div class="sos-contact-btn" data-toast="Anrufen…">📞</div></div></div>
+          </div>
+          <div class="sos-section-title">⚠️ Wichtig zu wissen</div>
+          <div class="sos-warning">
+            <div class="sos-warning-icon">🚁</div>
+            <div><strong>Rega-Heli-Einsätze sind kostenpflichtig</strong> und können CHF 3.000–10.000 betragen. Eine Reise- oder Rega-Gönner-Mitgliedschaft (CHF 40/Jahr) übernimmt die Kosten in der Regel. Im echten Notfall <strong>trotzdem sofort anrufen</strong> — Hilfe geht vor Geld.</div>
+          </div>
+          <div class="sos-disclaimer">Diese Notruf-Liste ist eine Hilfe vom Gastgeber. Verfügbarkeit, Reaktionszeit und Kosten richten sich nach den jeweiligen Diensten. Der Gastgeber haftet nicht für Notruf-Gebühren oder Folgen.</div>
+          <div style="height:24px;"></div>
+        </div>
+      </div>
+
+      <!-- Toast -->
+      <div class="toast" id="toast">Hi</div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const overlay = document.getElementById('overlay');
+  const toast = document.getElementById('toast');
+  let toastTimer = null;
+
+  // Open Sheet
+  function openSheet(name){
+    if(!name) return;
+    // Close any currently-open sheet first
+    document.querySelectorAll('.sheet.open').forEach(s => s.classList.remove('open'));
+    const sheet = document.getElementById('sheet-' + name);
+    if(!sheet) return;
+    overlay.classList.add('open');
+    requestAnimationFrame(() => sheet.classList.add('open'));
+  }
+
+  // Close all sheets
+  function closeSheets(){
+    overlay.classList.remove('open');
+    document.querySelectorAll('.sheet.open').forEach(s => s.classList.remove('open'));
+  }
+
+  // Toast
+  function showToast(message){
+    if(!message) return;
+    toast.textContent = message;
+    toast.classList.add('show');
+    if(toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+  }
+
+  // Single delegated click handler
+  document.addEventListener('click', function(e){
+    // Toast
+    const toastEl = e.target.closest('[data-toast]');
+    if(toastEl){
+      e.stopPropagation();
+      showToast(toastEl.getAttribute('data-toast'));
+      return;
+    }
+    // Open sheet
+    const opener = e.target.closest('[data-open]');
+    if(opener){
+      e.stopPropagation();
+      openSheet(opener.getAttribute('data-open'));
+      return;
+    }
+    // Close sheet
+    const closer = e.target.closest('[data-close]');
+    if(closer){
+      e.stopPropagation();
+      closeSheets();
+      return;
+    }
+    // Toggle accordion (rule-item, device-item)
+    const toggle = e.target.closest('[data-toggle]');
+    if(toggle){
+      e.stopPropagation();
+      toggle.classList.toggle('open');
+      return;
+    }
+  });
+
+  // Star rating (Feedback)
+  document.querySelectorAll('.fb-star').forEach(star => {
+    star.addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = parseInt(star.getAttribute('data-star'), 10);
+      document.querySelectorAll('.fb-star').forEach(s => {
+        const i = parseInt(s.getAttribute('data-star'), 10);
+        if(i <= idx) s.classList.remove('empty'); else s.classList.add('empty');
+      });
+      const labels = ['','1 — Verbesserungswürdig','2 — Ok','3 — Gut','4 — Sehr gut','5 — Hervorragend'];
+      const labelEl = document.getElementById('stars-label');
+      if(labelEl) labelEl.textContent = idx + ' von 5 Sternen — ' + labels[idx].split('— ')[1];
+    });
+  });
+
+  // Lang-Row Click (toggle active)
+  document.querySelectorAll('.lang-row').forEach(row => {
+    row.addEventListener('click', e => {
+      document.querySelectorAll('.lang-row').forEach(r => {
+        r.querySelector('.lang-check').classList.add('empty');
+      });
+      row.querySelector('.lang-check').classList.remove('empty');
+    });
+  });
+
+  // Msg-Tab + Cat-Chip + LP-Anchor + PM-Toggle: just toggle active
+  ['msg-tab', 'cat-chip', 'lp-anchor', 'pm-toggle-btn'].forEach(cls => {
+    document.querySelectorAll('.' + cls).forEach(el => {
+      el.addEventListener('click', e => {
+        e.stopPropagation();
+        const parent = el.parentElement;
+        parent.querySelectorAll('.' + cls).forEach(s => s.classList.remove('active'));
+        el.classList.add('active');
+      });
+    });
+  });
+
+  // Click on overlay closes sheet
+  overlay.addEventListener('click', closeSheets);
+})();
+</script>
+
+</body>
+</html>
